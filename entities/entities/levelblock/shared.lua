@@ -1,0 +1,9 @@
+ENT.Type = "anim"
+ENT.Base = "base_gmodentity"
+ENT.PrintName= "Monkey Block"
+ENT.Author= "BENIS TEAM"
+ENT.Contact= "sndrec32exe@gmail.com"
+ENT.Purpose= "Mombkey,,"
+ENT.Instructions= "Use wisely."
+ENT.Spawnable = true
+ENT.AdminSpawnable = true

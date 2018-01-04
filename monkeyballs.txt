@@ -1,0 +1,10 @@
+"monkeyballs"
+{
+	"base"          "sandbox"
+    "title"         "monkeyball"
+    "version"       "1"
+
+    "author_name"   "Az"
+    "author_email"  ""
+    "author_url"    ""
+}
