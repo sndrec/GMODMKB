@@ -111,7 +111,7 @@ local function parse( origin, entGroup )
             string_uvw = string_uvw .. "vt " .. ( vertB.u % 1 ) .. " " .. ( ( 1 - vertB.v ) % 1 ) .. " 0\n"
             string_uvw = string_uvw .. "vt " .. ( vertC.u % 1 ) .. " " .. ( ( 1 - vertC.v ) % 1 ) .. " 0\n"
 
-            string_face = string_face .. vertex .. "/" .. vertex .. "/" .. vertex .. " "
+            string_face = string_face .. "f " .. vertex .. "/" .. vertex .. "/" .. vertex .. " "
             string_face = string_face .. ( vertex + 2 ) .. "/" .. ( vertex + 2 ) .. "/" .. ( vertex + 2 ) .. " "
             string_face = string_face .. ( vertex + 1 ) .. "/" .. ( vertex + 1 ) .. "/" .. ( vertex + 1 ) .. "\n"
 

@@ -20,23 +20,34 @@ local meshtools = meshtools
 -----------------------------------------------------------------------
 
 function ENT:Initialize()
-        //self:SetModel( "models/hunter/blocks/cube025x025x025.mdl" )
         self:DrawShadow( false )
-
         self:PhysicsInit( SOLID_VPHYSICS )
-        self:SetMoveType( MOVETYPE_VPHYSICS )
+        self:SetMoveType( MOVETYPE_NONE )
         self:SetSolid( SOLID_VPHYSICS )
+        self:SetAngles(Angle(0, 0, 90))
 
-        //self:GetPhysicsObject():Wake()
+        if CLIENT then
+            // Doesnt allways render - hacky fix anyway
+            self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
+        end
+
         self.Mesh = {
             CRC = nil,
             Loaded = false,
             Phys = false,
             Matrix = Matrix(),
-            Material = Material( "models/debug/debugwhite" ),
+            defaultMat = Material("models/wireframe"),
+            Material = {["check.001"] = Material( "monkeyball/tex1_256x256_m_1f5fc1b864fb09a4_14" ), ["wood"] = Material( "wood.png", "noclamp smooth mips" ), ["check"] = Material( "floor.png", "noclamp smooth mips" ), ["Material.001"] = Material("monkeyball/tex1_256x256_m_593cb191329c9ee5_14")},
+            Mesh = {},
         }
-        self:LoadObjFromURL("https://puu.sh/yTEXE/d11542856a.obj", true)
-        self:AddEFlags( EFL_IN_SKYBOX )
+        
+        //https://share.rtm516.co.uk/floor.png
+        //https://share.rtm516.co.uk/wood.png
+
+
+        //obj: https://share.rtm516.co.uk/lvl55.obj
+        //mtl: https://share.rtm516.co.uk/lvl55.mtl
+        self:LoadObjFromURL("https://share.rtm516.co.uk/lvl1.obj", true)
 end
 
 -----------------------------------------------------------------------
@@ -55,10 +66,6 @@ if SERVER then
         Ent:Activate()
 
         return Ent
-    end
-
-    function ENT:UpdateTransmitState()
-        return TRANSMIT_ALWAYS
     end
 
 end
@@ -82,28 +89,51 @@ function ENT:LoadObjFromURL( url, forceReload )
     end)
 end
 
-function ENT:Think() 
+function ENT:Think()
     if self.Mesh.Phys then return true end
-    if self.Mesh.CRC then
-        if meshCache[self.Mesh.CRC] then
-            self:PhysicsFromMesh(meshCache[self.Mesh.CRC])
-            self:GetPhysicsObject():Wake()
-            self.Mesh.Phys = true
-        end
+    if self.Mesh.CRC && meshCache[self.Mesh.CRC] then
+        self:PhysicsFromMesh(meshCache[self.Mesh.CRC].all)
+		self:GetPhysicsObject():EnableCollisions( true );
+		self:GetPhysicsObject():EnableMotion( false );
+		self:EnableCustomCollisions(true)
+        self.Mesh.Phys = true
     end
+end
+
+if SERVER then
+    hook.Remove( "PlayerInitialSpawn", "spawn_map" )
+    hook.Add( "PlayerInitialSpawn", "spawn_map", function()
+        local alivePlayers = 0
+        for k,v in pairs(player.GetAll()) do
+            if v:Alive() then
+                alivePlayers = alivePlayers + 1
+            end
+        end
+        if alivePlayers != player.GetCount() then return end
+        if map then return end
+        map = ents.Create("sent_meshtools")
+        map:SetPos(Vector(0, 16000, 0))
+        map:Spawn()
+        map:Activate()
+    end)
+    hook.Remove( "PlayerSpawn", "spawn_point" )
+    hook.Add( "PlayerSpawn", "spawn_point", function(ply)
+        ply:SetPos(Vector(0, 16000, 0))
+    end )
 end
 
 if not CLIENT then return end
 function ENT:ShouldDraw()
     if not self.Mesh then return false end
 
-    //self:DrawModel()
-
     if self.Mesh.Loaded then return true end
     if self.Mesh.CRC then
         if meshCache[self.Mesh.CRC] then
-            self.Mesh.Mesh = Mesh()
-            self.Mesh.Mesh:BuildFromTriangles( meshCache[self.Mesh.CRC] )
+            for k,v in pairs(meshCache[self.Mesh.CRC]) do
+                if k == "all" then continue end
+                self.Mesh.Mesh[k] = Mesh()
+                self.Mesh.Mesh[k]:BuildFromTriangles( v )
+            end
             self.Mesh.Loaded = true
         end
         return false
@@ -116,14 +146,18 @@ function ENT:Draw()
     self.Mesh.Matrix:SetTranslation( self:GetPos() )
     self.Mesh.Matrix:SetAngles( self:GetAngles() )
 
-    render.SetMaterial( self.Mesh.Material )
     render.SetLightingMode( 1 )
-    cam.PushModelMatrix( self.Mesh.Matrix )
+    render.OverrideDepthEnable(true, true)
 
-    self.Mesh.Mesh:Draw()
+    for k,v in pairs(self.Mesh.Mesh) do
+        render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
+        cam.PushModelMatrix( self.Mesh.Matrix )
+            v:Draw()
+        cam.PopModelMatrix()
+    end
 
-    cam.PopModelMatrix()
     render.SetLightingMode( 0 )
+    render.OverrideDepthEnable(false, false)
 end
 
 
@@ -137,6 +171,6 @@ hook.Add( "HUDPaint", "meshtools.LoadOverlay", function()
         if ent.Mesh.Loaded then continue end
 
         local scr = ( ent:GetPos() + Vector( 0, 0, 20 ) ):ToScreen()
-        draw.WordBox( 6, scr.x, scr.y, "Loading.." .. ent:EntIndex(), "DermaDefault", bc, tc )
+        draw.WordBox( 6, scr.x, scr.y, "Loading...", "DermaDefault", bc, tc )
     end
 end )

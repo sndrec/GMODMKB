@@ -39,20 +39,24 @@ local function vec( data, norm )
 end
 
 local function uvw( data )
-    return { u = tonumber( data[2] ) % 1, v = tonumber( 1 - data[3] ) % 1 }
+    return { u = tonumber( data[2] ), v = tonumber( 1 - data[3] ) }
 end
 
 local function parse( obj )
     local faces, vcoords, ncoords, tcoords = {}, {}, {}, {}
 
+    local curMat = "unknown"
     for line in string.gmatch( obj, "(.-)\n" ) do
         local data = string.Explode( "%s+", string.Trim( line ), true )
         local type = data[1]
 
-        if     type == "f"  and #data >= 4 then faces[#faces + 1] = data
+        if     type == "f"  and #data >= 4 then
+            data["mat"] = curMat
+            faces[#faces + 1] = data
         elseif type == "v"  and #data >= 4 then vcoords[#vcoords + 1] = vec( data, false )
         elseif type == "vn" and #data >= 4 then ncoords[#ncoords + 1] = vec( data, true )
         elseif type == "vt" and #data >= 3 then tcoords[#tcoords + 1] = uvw( data )
+        elseif type == "usemtl" and #data >= 2 then curMat = data[2]
         end
 
         coroutine.yield( false )
@@ -62,10 +66,14 @@ local function parse( obj )
     local hasUVW = #tcoords >= 1
 
     local meshData = {}
+    meshData.all = {}
+
+    curMat = "unknown"
 
     for _, face in pairs( faces ) do
         local faceVertexA = fixFace( face[2] )
         local faceVertexB = fixFace( face[3] )
+        curMat = face["mat"]
 
         for i = 4, #face do
             local faceVertexC = fixFace( face[i] )
@@ -95,9 +103,16 @@ local function parse( obj )
                 meshVertexC.v = tcoords[faceVertexB[2]].v
             end
 
-            meshData[#meshData + 1] = meshVertexA
-            meshData[#meshData + 1] = meshVertexB
-            meshData[#meshData + 1] = meshVertexC
+            if CLIENT then
+                meshData[curMat] = meshData[curMat] or {}
+                meshData[curMat][#meshData[curMat] + 1] = meshVertexA
+                meshData[curMat][#meshData[curMat] + 1] = meshVertexB
+                meshData[curMat][#meshData[curMat] + 1] = meshVertexC
+            end
+
+            meshData.all[#meshData.all + 1] = meshVertexA
+            meshData.all[#meshData.all + 1] = meshVertexB
+            meshData.all[#meshData.all + 1] = meshVertexC
 
             faceVertexB = faceVertexC
         end

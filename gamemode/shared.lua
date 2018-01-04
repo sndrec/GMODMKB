@@ -1,4 +1,4 @@
-GM.Name 	= "Monkey balls"
+GM.Name 	= "Super Monkey Ball"
 GM.Author 	= "Az"
 GM.Email 	= ""
 GM.Website 	= ""
