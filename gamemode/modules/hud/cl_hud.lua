@@ -17,6 +17,8 @@ function draw.Heart(x, y, scale)
 	surface.DrawPoly(heart)
 end
 
+local worldMat = Material("monkeyball/icons8-globe-64.png", "mips smooth") // https://icons8.com/icon/63766/globe
+
 function GM:HUDPaint()
 	local colors = {}
 	colors.black = Color(0, 0, 0, 255)
@@ -43,11 +45,31 @@ function GM:HUDPaint()
 
 		return true
 	end
+	surface.SetFont("DermaLarge")
+
 	if ClientBall ~= nil and ClientBall:IsValid() then
-		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaLarge",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+		local speedPlaceholderW, speedPlaceholderH = surface.GetTextSize("999 KM/H")
+		draw.RoundedBoxEx(5, 0, ScrH() * 0.9-5, (speedPlaceholderW+20), speedPlaceholderH+10, Color(0, 0, 0, 200), false, true, false, true)
+		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaLarge",speedPlaceholderW+10,ScrH() * 0.9,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,2,Color(0,0,0))
 	end
+
+	local timePlaceholderW, timePlaceholderH = surface.GetTextSize("99:99:99")
+
+	draw.RoundedBoxEx(5, (ScrW()*0.5)-(timePlaceholderW+20), 0, (timePlaceholderW+20)*2, timePlaceholderH+10, Color(0, 0, 0, 200), false, false, true, true)
+
+	surface.SetDrawColor( 255, 255, 255, 255 )
+	surface.SetMaterial( worldMat )
+	surface.DrawTexturedRect( (ScrW()*0.5)-(timePlaceholderW+20)+5, 5, timePlaceholderH, timePlaceholderH )
+	surface.DrawTexturedRect( (ScrW()*0.5)-(timePlaceholderW+20)+(timePlaceholderW+20)*2-5-timePlaceholderH, 5, timePlaceholderH, timePlaceholderH )
+
+	local lvlName = GetGlobalString("levelinfo", "MB_W1_L1")
+	local lvlParts = string.Split(lvlName, "_")
+	draw.SimpleTextOutlined(lvlParts[2] .. " - ".. lvlParts[3],"DermaLarge",ScrW()*0.5, 5, Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_TOP,2,Color(0,0,0))
+
+	draw.RoundedBoxEx(5, (ScrW()*0.5)-((timePlaceholderW+20)/2), timePlaceholderH+10, timePlaceholderW+20, timePlaceholderH+10, Color(0, 0, 0, 200), false, false, true, true)
+
 	local time = string.FormattedTime( GetGlobalFloat( "worldtimer", 0 ) - CurTime(), "%02i:%02i:%02i" )
-	draw.SimpleTextOutlined(time,"DermaLarge",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	draw.SimpleTextOutlined(time,"DermaLarge",ScrW()*0.5, timePlaceholderH+5+10, Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_TOP,2,Color(0,0,0))
 end
 
 function GM:InitPostEntity()

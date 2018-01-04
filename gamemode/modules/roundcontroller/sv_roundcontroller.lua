@@ -63,6 +63,7 @@ function GM:Tick()
 		end
 	end
 	SetGlobalFloat( "worldtimer", roundInfo.curTimer )
+	SetGlobalString( "levelinfo", roundInfo.curLevel )
 	if roundInfo.curState == STATE_ROUNDACTIVE then
 		local hasntCompleted = 0
 		for i, v in ipairs(pls) do
