@@ -7,6 +7,8 @@ include('shared.lua')
 resource.AddWorkshop("1175000472")
 resource.AddWorkshop("999854920")
 
+util.AddNetworkString("MeshURL")
+
 local function LoadModules()
 	local root = GM.FolderName.."/gamemode/modules/"
 

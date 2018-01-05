@@ -1,7 +1,8 @@
 STATE_WAITINGFORPLAYERS = 0
-STATE_ROUNDACTIVE = 1
-STATE_LEVELTRANSITION = 2
-STATE_GAMEOVER = 3
+STATE_ROUNDSTARTING = 1
+STATE_ROUNDACTIVE = 2
+STATE_LEVELTRANSITION = 3
+STATE_GAMEOVER = 4
 
 local roundTimers = {}
 roundTimers[STATE_WAITINGFORPLAYERS] = 5
@@ -21,10 +22,14 @@ function GM:Tick()
 		end
 		if roundInfo.curState == STATE_WAITINGFORPLAYERS then
 			LoadLevel(roundInfo.curLevel)
-			roundInfo.curState = STATE_ROUNDACTIVE
-			roundInfo.curTimer = CurTime() + newLevelTimer
+			roundInfo.curState = STATE_ROUNDSTARTING
+			roundInfo.curTimer = CurTime() + 5
 			for i, v in ipairs(pls) do
 				v:ChatPrint("Current level: " .. roundInfo.curLevel)
+				if v.ballEnt and v.ballEnt:IsValid() then
+					v.ballEnt:Remove()
+				end
+				self:PlayerSpawnAsSpectator(v)
 			end
 		elseif roundInfo.curState == STATE_ROUNDACTIVE then
 			roundInfo.curState = STATE_LEVELTRANSITION
@@ -37,11 +42,17 @@ function GM:Tick()
 				self:PlayerSpawnAsSpectator(v)
 			end
 		elseif roundInfo.curState == STATE_LEVELTRANSITION then
+			for i, v in ipairs(pls) do
+				if v.ballEnt and v.ballEnt:IsValid() then
+					v.ballEnt:Remove()
+				end
+				self:PlayerSpawnAsSpectator(v)
+			end
 			if propTable.nextLevel then
 				roundInfo.curLevel = propTable.nextLevel
 				LoadLevel(roundInfo.curLevel)
-				roundInfo.curState = STATE_ROUNDACTIVE
-				roundInfo.curTimer = CurTime() + newLevelTimer
+				roundInfo.curState = STATE_ROUNDSTARTING
+				roundInfo.curTimer = CurTime() + 5
 				for i, v in ipairs(pls) do
 					v:ChatPrint("Current level: " .. roundInfo.curLevel)
 				end
@@ -49,8 +60,15 @@ function GM:Tick()
 				for i, v in ipairs(pls) do
 					v:ChatPrint("World complete!")
 				end
-				roundInfo.curTimer = CurTime() + 15
+				roundInfo.curTimer = CurTime() + 5
 				roundInfo.curState = STATE_GAMEOVER
+			end
+		elseif roundInfo.curState == STATE_ROUNDSTARTING then
+			roundInfo.curState = STATE_ROUNDACTIVE
+			roundInfo.curTimer = CurTime() + newLevelTimer
+			for i, v in ipairs(pls) do
+				v.playing = true
+				v:Spawn()
 			end
 		elseif roundInfo.curState == STATE_GAMEOVER then
 			-- THIS IS JUST TEMPORARY FOR TESTING --
@@ -73,12 +91,22 @@ function GM:Tick()
 					self:PlayerSpawnAsSpectator(v)
 				end
 			end
+			if v:GetObserverMode() ~= OBS_MODE_NONE and v.nextSpawn and CurTime() > v.nextSpawn then
+				v:Spawn()
+				v.nextSpawn = nil
+			end
 		end
 		if hasntCompleted == 0 then
-			 roundInfo.curTimer = CurTime()
-			 for i, v in ipairs(pls) do
-			 	v:ChatPrint("Everyone beat the level.")
-			 end
+			if not allCompleteTimer then allCompleteTimer = 0 end
+			allCompleteTimer = allCompleteTimer + 1
+			if allCompleteTimer > 120 then
+				roundInfo.curTimer = CurTime()
+				for i, v in ipairs(pls) do
+					v:ChatPrint("Everyone beat the level.")
+				end
+			end
+		else
+			allCompleteTimer = 0
 		end
 	end
 end

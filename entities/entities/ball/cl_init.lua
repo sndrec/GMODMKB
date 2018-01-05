@@ -32,10 +32,10 @@ function ENT:Initialize()
 	if self:GetOwner() == LocalPlayer() then
 		self.rotAngle = Angle(0,0,0)
 		self.spawnTime = CurTime()
+		self.spawnPos = self:GetPos()
 		ClientBall = self
-
 		rotOffset = Angle(0,0,0)
-		ballViewAng = LocalPlayer():GetAngles()
+		ballViewAng = Angle(0,0,0)
 --	
 --		local texture = GetRenderTarget('uniquert'..os.time(), 300, 300, false)
 --		
@@ -59,34 +59,35 @@ function ENT:Draw()
 	local fakeVel = self:GetVelocity()
 	self.baseAngle:RotateAroundAxis(-fakeVel:Angle():Right(),fakeVel:Length() * FrameTime() * 1.5)
 	self:SetRenderAngles(self.baseAngle)
-	if ClientBall:IsValid() then
+	if self:GetModelScale() ~= 1.8 then
+		self:SetModelScale(1.8,0)
+	end
+	if self:GetOwner() == LocalPlayer() then
+		local rotAngle = Angle(0,0,0)
+		local rotAx = _VIEWANGLES_CLONE
+		rotAx.p = 0
+		rotAx.r = 0
+		rotAngle:RotateAroundAxis(rotAx:Up(),_VIEWANGLES.y)
+		rotAngle:RotateAroundAxis(rotAx:Forward(),_ROTOFFSET.r)
+		rotAngle:RotateAroundAxis(rotAx:Right(),-_ROTOFFSET.p - ballViewAng.p - 15)
+		self.rotAngle = rotAngle
+	end
+	if ClientBall and ClientBall:IsValid() then
 		cam.Start3D(_VIEWORIGIN, _VIEWANGLES, 80)
 		self:DrawModel()
 		cam.End3D()
 	else
 		self:DrawModel()
 	end
-	if self:GetModelScale() ~= 1.8 then
-		self:SetModelScale(1.8,0)
-	end
-	local rotAngle = Angle(0,0,0)
-	local rotAx = _VIEWANGLES_CLONE
-	rotAx.p = 0
-	rotAx.r = 0
-	rotAngle:RotateAroundAxis(rotAx:Up(),_VIEWANGLES.y)
-	rotAngle:RotateAroundAxis(rotAx:Forward(),_ROTOFFSET.r)
-	rotAngle:RotateAroundAxis(rotAx:Right(),-_ROTOFFSET.p - ballViewAng.p - 15)
-	self.rotAngle = rotAngle
 
 end
 
-rotOffset = Angle(0,0,0)
-ballViewAng = Angle(0,0,0)
-
 function ENT:Think()
-	net.Start("GetViewAngle")
-	net.WriteAngle(ballViewAng)
-	net.SendToServer()
+	if self:GetOwner() == LocalPlayer() then
+		net.Start("GetViewAngle")
+		net.WriteAngle(ballViewAng)
+		net.SendToServer()
+	end
 end
 
 local tiltIntensity = CreateConVar( "mb_tiltintensity", 0.15, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Intensity of world tilt when moving around the level." )
@@ -127,11 +128,6 @@ local function MyCalcView( pl, pos, angles, fov )
 	--end
 
 	local tempVel = ballVel
-	local onGround = util.TraceLine({
-		start = ClientBall:GetPos(),
-		endpos = ClientBall:GetPos() + Vector(0,0,-30),
-		filter = {ClientBall, pl}
-		})
 	if tempVel.z > 0 then
 		tempVel.z = (tempVel.z / 1.5) - 50
 	end
@@ -159,13 +155,8 @@ local function MyCalcView( pl, pos, angles, fov )
 	local camupReal = camUp:GetFloat()
 	local camsideReal = camDistance:GetFloat()
 	local origin = ClientBall:GetPos()
-	local onGround2 = util.TraceLine({
-		start = ClientBall:GetPos(),
-		endpos = ClientBall:GetPos() + Vector(0,0,-300),
-		filter = {ClientBall, pl}
-		})
 	if CurTime() < ClientBall.spawnTime + 0.6 then
-		origin = onGround2.HitPos + Vector(0,0,25)
+		origin = ClientBall.spawnPos + Vector(0,0,-200)
 		camOffset = 0
 	end
 	debugoverlay.Cross(origin,16,0.1,Color( 255, 255, 255 ),true)

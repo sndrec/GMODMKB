@@ -25,6 +25,7 @@ function ENT:Initialize()
         self:SetMoveType( MOVETYPE_NONE )
         self:SetSolid( SOLID_VPHYSICS )
         self:SetAngles(Angle(0, 0, 90))
+        print("I am spawning now")
 
         if CLIENT then
             // Doesnt allways render - hacky fix anyway
@@ -47,7 +48,6 @@ function ENT:Initialize()
 
         //obj: https://share.rtm516.co.uk/lvl55.obj
         //mtl: https://share.rtm516.co.uk/lvl55.mtl
-        self:LoadObjFromURL("https://share.rtm516.co.uk/lvl1.obj", true)
 end
 
 -----------------------------------------------------------------------
@@ -83,43 +83,43 @@ end
 
 function ENT:LoadObjFromURL( url, forceReload )
     http.Fetch(url, function(body)
-        local tmpFilepath = "tmp_obj_download.dat"
+        print("Here is our URL:")
+        print(url)
+        local tmpFilepath = string.Left(string.Right(url,10), 6) .. ".dat"
+        print("Here is our temporary file path:")
+        print(tmpFilepath)
         file.Write(tmpFilepath, body)
         self:LoadObjFromFile(tmpFilepath, forceReload)
     end)
+    if SERVER then
+        net.Start("MeshURL")
+        net.WriteInt(self:EntIndex(), 16)
+        net.WriteString(url)
+        net.Broadcast()
+    end
 end
+
+net.Receive("MeshURL", function()
+    local ent = net.ReadInt(16)
+    local url = net.ReadString()
+    print("receiving mesh url")
+    print(url)
+    timer.Simple(0.5,function()
+        Entity(ent):LoadObjFromURL(url)
+    end)
+end)
 
 function ENT:Think()
     if self.Mesh.Phys then return true end
     if self.Mesh.CRC && meshCache[self.Mesh.CRC] then
-        self:PhysicsFromMesh(meshCache[self.Mesh.CRC].all)
-		self:GetPhysicsObject():EnableCollisions( true );
-		self:GetPhysicsObject():EnableMotion( false );
-		self:EnableCustomCollisions(true)
+        if SERVER then
+            self:PhysicsFromMesh(meshCache[self.Mesh.CRC].all)
+		    self:GetPhysicsObject():EnableCollisions( true );
+		    self:GetPhysicsObject():EnableMotion( false );
+		    self:EnableCustomCollisions(true)
+        end
         self.Mesh.Phys = true
     end
-end
-
-if SERVER then
-    hook.Remove( "PlayerInitialSpawn", "spawn_map" )
-    hook.Add( "PlayerInitialSpawn", "spawn_map", function()
-        local alivePlayers = 0
-        for k,v in pairs(player.GetAll()) do
-            if v:Alive() then
-                alivePlayers = alivePlayers + 1
-            end
-        end
-        if alivePlayers != player.GetCount() then return end
-        if map then return end
-        map = ents.Create("sent_meshtools")
-        map:SetPos(Vector(0, 16000, 0))
-        map:Spawn()
-        map:Activate()
-    end)
-    hook.Remove( "PlayerSpawn", "spawn_point" )
-    hook.Add( "PlayerSpawn", "spawn_point", function(ply)
-        ply:SetPos(Vector(0, 16000, 0))
-    end )
 end
 
 if not CLIENT then return end
@@ -143,21 +143,41 @@ end
 function ENT:Draw()
     if not self:ShouldDraw() then return end
 
-    self.Mesh.Matrix:SetTranslation( self:GetPos() )
-    self.Mesh.Matrix:SetAngles( self:GetAngles() )
-
-    render.SetLightingMode( 1 )
-    render.OverrideDepthEnable(true, true)
-
-    for k,v in pairs(self.Mesh.Mesh) do
-        render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
-        cam.PushModelMatrix( self.Mesh.Matrix )
-            v:Draw()
-        cam.PopModelMatrix()
+    if ClientBall and ClientBall:IsValid() then
+        self.Mesh.Matrix:SetTranslation( self:GetPos() )
+        self.Mesh.Matrix:SetAngles( self:GetAngles() )
+    
+        render.SetLightingMode( 1 )
+        render.OverrideDepthEnable(true, true)
+    
+        cam.Start3D(_VIEWORIGIN, _VIEWANGLES, 80)
+        for k,v in pairs(self.Mesh.Mesh) do
+            render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
+            cam.PushModelMatrix( self.Mesh.Matrix )
+                v:Draw()
+            cam.PopModelMatrix()
+        end
+        cam.End3D()
+    
+        render.SetLightingMode( 0 )
+        render.OverrideDepthEnable(false, false)
+    else
+        self.Mesh.Matrix:SetTranslation( self:GetPos() )
+        self.Mesh.Matrix:SetAngles( self:GetAngles() )
+    
+        render.SetLightingMode( 1 )
+        render.OverrideDepthEnable(true, true)
+    
+        for k,v in pairs(self.Mesh.Mesh) do
+            render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
+            cam.PushModelMatrix( self.Mesh.Matrix )
+                v:Draw()
+            cam.PopModelMatrix()
+        end
+    
+        render.SetLightingMode( 0 )
+        render.OverrideDepthEnable(false, false)
     end
-
-    render.SetLightingMode( 0 )
-    render.OverrideDepthEnable(false, false)
 end
 
 

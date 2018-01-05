@@ -146,17 +146,26 @@ function ENT:Think()
 	gravDir = gravDir:GetNormalized()
 	self.physObj:SetVelocity(self.physObj:GetVelocity() + (gravDir * 1500 * FrameTime()))
 
-	if self:GetPos():WithinAABox(propTable.goalVol.mins, propTable.goalVol.maxs) then
+	local goalTrace = nil
+	if not self.oldPos then
+		self.oldPos = self:GetPos()
+	else
+		goalTrace = util.TraceLine({
+			start = self.oldPos,
+			endpos = self:GetPos(),
+			filter = function(ent)
+				return ent:GetModel() == "models/monkeyball/goaltrigger.mdl"
+			end
+		})
+	end
+	if goalTrace and goalTrace.Hit then
 		self:GetOwner():ChatPrint("You beat the level.")
 		self:Remove()
 	end
-	if self:GetPos().z < -7000 then
+	self.oldPos = self:GetPos()
+	if self:GetPos().z < -3000 then
 		self:Remove()
-		timer.Simple(1, function()
-			pl:SetTeam(TEAM_PLAYERS)
-			pl:KillSilent()
-			pl:Spawn()
-		end)
+		pl.nextSpawn = CurTime() + 1
 	end
 	self:NextThink( CurTime() )
 	return true

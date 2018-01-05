@@ -1,5 +1,10 @@
 function GM:PlayerSpawn(pl)
 	if not CurSpawnPos then return end
+	if not pl.playing then
+		pl:SetObserverMode(OBS_MODE_ROAMING)
+		pl:SetPos(Vector(0,0,500))
+		return
+	end
 	pl:SetObserverMode(OBS_MODE_NONE)
 	pl:SetTeam(TEAM_PLAYERS)
 	local ball = ents.Create("ball")
@@ -36,10 +41,13 @@ function GM:PlayerSpawn(pl)
 	if pl:FlashlightIsOn() then
 		pl:Flashlight(false)
 	end
+	for i, v in ipairs(ents.FindByModel("models/monkeyball/goalTrigger.mdl")) do
+		constraint.NoCollide( pl.ballEnt, v, 0, 0 )
+	end
 end
 
 function GM:PlayerInitialSpawn(pl)
-	pl:SetTeam(TEAM_PLAYERS)
+	self:PlayerSpawnAsSpectator(pl)
 end
 
 function GM:PlayerDeathSound()

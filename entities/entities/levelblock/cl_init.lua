@@ -5,7 +5,7 @@ function ENT:Initialize()
 end
 
 function ENT:Draw()
-	if ClientBall:IsValid() then
+	if ClientBall and ClientBall:IsValid() then
 		cam.Start3D(_VIEWORIGIN, _VIEWANGLES, 80)
 		self:DrawModel()
 		cam.End3D()
