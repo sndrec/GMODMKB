@@ -1,7 +1,10 @@
 include('shared.lua')
 
 skyCamPos = Vector(0,0,-14000)
-
+_VIEWORIGIN = Vector(0,0,0)
+_VIEWANGLES = Angle(0,0,0)
+_VIEWANGLES_CLONE = Angle(0,0,0)
+_ROTOFFSET = Angle(0,0,0)
 
 function draw.Circle( x, y, radiusx, radiusy, seg )
 	local cir = {}
@@ -51,6 +54,7 @@ function ENT:Initialize()
 --		});		
 	end
 	self.baseAngle = Angle(0,0,0)
+	self.netTimer = CurTime() + 0.25
 
 end
 
@@ -59,8 +63,8 @@ function ENT:Draw()
 	local fakeVel = self:GetVelocity()
 	self.baseAngle:RotateAroundAxis(-fakeVel:Angle():Right(),fakeVel:Length() * FrameTime() * 1.5)
 	self:SetRenderAngles(self.baseAngle)
-	if self:GetModelScale() ~= 1.8 then
-		self:SetModelScale(1.8,0)
+	if self:GetModelScale() ~= 1.75 then
+		self:SetModelScale(1.75,0)
 	end
 	if self:GetOwner() == LocalPlayer() then
 		local rotAngle = Angle(0,0,0)
@@ -72,18 +76,13 @@ function ENT:Draw()
 		rotAngle:RotateAroundAxis(rotAx:Right(),-_ROTOFFSET.p - ballViewAng.p - 15)
 		self.rotAngle = rotAngle
 	end
-	if ClientBall and ClientBall:IsValid() then
-		cam.Start3D(_VIEWORIGIN, _VIEWANGLES, 80)
-		self:DrawModel()
-		cam.End3D()
-	else
-		self:DrawModel()
-	end
+	self:DrawModel()
 
 end
 
 function ENT:Think()
-	if self:GetOwner() == LocalPlayer() then
+	if self:GetOwner() == LocalPlayer() and CurTime() > self.netTimer then
+		self.netTimer = CurTime() + 0.1
 		net.Start("GetViewAngle")
 		net.WriteAngle(ballViewAng)
 		net.SendToServer()
@@ -91,14 +90,40 @@ function ENT:Think()
 end
 
 local tiltIntensity = CreateConVar( "mb_tiltintensity", 0.15, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Intensity of world tilt when moving around the level." )
-local camUp = CreateConVar( "mb_camUp", 70, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Upward camera offset" )
-local camDistance = CreateConVar( "mb_camDistance", 120, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Camera Distance" )
+local camUp = CreateConVar( "mb_camUp", 50, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Upward camera offset" )
+local camDistance = CreateConVar( "mb_camDistance", 200, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Camera Distance" )
 
 local function MyCalcView( pl, pos, angles, fov )
 	local view = {}
 
 	--
-	if ClientBall == nil or not ClientBall:IsValid() then return end
+	local StartTime = GetGlobalFloat("LastStartTime", 0)
+
+	if StartTime + 2.42 > CurTime() then
+		local SpinCamOrigin = GetGlobalVector("SpinCamOrigin",Vector(0,0,0))
+		local BallSpawnPos = GetGlobalVector("BallSpawnPos", Vector(0,0,0))
+		local SpinCamDist = GetGlobalFloat("SpinCamDist", 1000)
+		debugoverlay.Cross(SpinCamOrigin,32,0.05,Color( 255, 0, 0 ),true)
+		local lerp = ((StartTime + 2.4) - CurTime()) / 2.4
+		local smoothLerp = 1 - ((math.sin((math.Clamp(lerp * 1.5, 0, 1) * math.pi) - (math.pi * 0.5)) + 1) * 0.5)
+
+		local CamPosBase = SpinCamOrigin - (Angle(30,(lerp * 135),0):Forward() * SpinCamDist)
+		local CamAngle = Angle(30,(lerp * 135),0)
+		local camupReal = camUp:GetFloat()
+		local camsideReal = camDistance:GetFloat()
+
+		local finalCamAngle = Angle(15,0,0)
+		local finalCamPos = BallSpawnPos - ( finalCamAngle:Forward() * camsideReal) + ( finalCamAngle:Up() * camupReal ) - Vector(0,0,25)
+
+		local lerpCamPos = LerpVector(smoothLerp,CamPosBase,finalCamPos)
+		local lerpCamAngle = LerpAngle(smoothLerp,CamAngle,Angle(0,0,0))
+		
+		view.origin = lerpCamPos
+		view.angles = lerpCamAngle
+		view.fov = 80
+		view.drawviewer = false
+		return view
+	elseif ClientBall == nil or not ClientBall:IsValid() then return end
 	local ballVel = ClientBall:GetVelocity()
 
 	rotOffset = Angle(rotOffset.p / ((10 * FrameTime()) + 1),rotOffset.y / ((16 * FrameTime()) + 1),rotOffset.r / ((16 * FrameTime()) + 1))
@@ -132,7 +157,6 @@ local function MyCalcView( pl, pos, angles, fov )
 		tempVel.z = (tempVel.z / 1.5) - 50
 	end
 	if tempVel.z > -100 and tempVel.z < 100 then tempVel.z = 0 end
-
 	local tempVelAngle = tempVel:Angle()
 
 	if tempVel:Length() < 50 then
@@ -155,7 +179,7 @@ local function MyCalcView( pl, pos, angles, fov )
 	local camupReal = camUp:GetFloat()
 	local camsideReal = camDistance:GetFloat()
 	local origin = ClientBall:GetPos()
-	if CurTime() < ClientBall.spawnTime + 0.6 then
+	if CurTime() < ClientBall.spawnTime + 0.62 then
 		origin = ClientBall.spawnPos + Vector(0,0,-200)
 		camOffset = 0
 	end
@@ -163,12 +187,12 @@ local function MyCalcView( pl, pos, angles, fov )
 	local viewVec = origin - ( ClientBall.rotAngle:Forward() * camsideReal) + ( ClientBall.rotAngle:Up() * (camupReal * offset) )
 	ballViewAng = Angle(p,y,r)
 	view.origin = viewVec
-	view.angles = ballViewAng + Angle(15,0,0)
+	view.angles = Angle(0,ballViewAng.y,ballViewAng.r) + Angle(ClientBall.rotAngle.p,0,ClientBall.rotAngle.r)
 	view.fov = 80
 	view.drawviewer = true
 
 	_VIEWORIGIN = view.origin
-	_VIEWANGLES = Angle(0,ballViewAng.y,ballViewAng.r) + Angle(ClientBall.rotAngle.p,0,ClientBall.rotAngle.r)
+	_VIEWANGLES = ballViewAng + Angle(15,0,0)
 	_VIEWANGLES_CLONE = ballViewAng + Angle(15,0,0)
 	_ROTOFFSET = rotOffset
 

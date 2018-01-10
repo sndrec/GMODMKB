@@ -19,18 +19,29 @@ local meshtools = meshtools
 -- Meshtools Base Entity Shared
 -----------------------------------------------------------------------
 
+local matTable = {}
+matTable["W1"] = {}
+matTable["W1"]["check"] = Material("monkeyball/tex1_256x256_m_5fa7688318397a55_14.png", "noclamp smooth mips")
+matTable["W1"]["check2"] = Material("monkeyball/tex1_256x256_m_5e303c7e6163e11b_14_mip1.png", "noclamp smooth mips")
+matTable["W1"]["check3"] = Material("monkeyball/tex1_256x256_m_6be1f1d9f4769ab4_14.png", "noclamp smooth mips")
+matTable["W1"]["fill"] = Material("monkeyball/tex1_256x256_m_f6cb8c76c35f0e99_14.png", "noclamp smooth mips")
+matTable["W1"]["wood"] = Material("monkeyball/tex1_256x256_m_f6cb8c76c35f0e99_14.png", "noclamp smooth mips")
+matTable["W1"]["detail"] = Material("monkeyball/tex1_256x128_m_1f1b668f7d005e49_14.png", "noclamp smooth mips")
+matTable["W1"]["detail2"] = Material("monkeyball/13.png", "noclamp smooth mips")
+matTable["W1"]["detail3"] = Material("monkeyball/tex1_256x256_m_053618233250036d_14.png", "noclamp smooth mips")
+matTable["W1"]["trim"] = Material("monkeyball/tex1_256x64_m_ac3f639aec944ccb_14.png", "noclamp smooth mips")
+
 function ENT:Initialize()
         self:DrawShadow( false )
         self:PhysicsInit( SOLID_VPHYSICS )
         self:SetMoveType( MOVETYPE_NONE )
         self:SetSolid( SOLID_VPHYSICS )
         self:SetAngles(Angle(0, 0, 90))
-        print("I am spawning now")
 
         if CLIENT then
-            // Doesnt allways render - hacky fix anyway
             self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
         end
+        self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 
         self.Mesh = {
             CRC = nil,
@@ -38,7 +49,7 @@ function ENT:Initialize()
             Phys = false,
             Matrix = Matrix(),
             defaultMat = Material("models/wireframe"),
-            Material = {["check.001"] = Material( "monkeyball/tex1_256x256_m_1f5fc1b864fb09a4_14" ), ["wood"] = Material( "wood.png", "noclamp smooth mips" ), ["check"] = Material( "floor.png", "noclamp smooth mips" ), ["Material.001"] = Material("monkeyball/tex1_256x256_m_593cb191329c9ee5_14")},
+            Material = matTable["W1"],
             Mesh = {},
         }
         
@@ -55,6 +66,20 @@ end
 -----------------------------------------------------------------------
 
 if SERVER then
+
+    function ENT:UpdateTransmitState()
+        return TRANSMIT_ALWAYS
+    end
+
+    util.AddNetworkString( "RequestMesh" )
+
+    net.Receive("RequestMesh", function(len, pl)
+        local ent = Entity(net.ReadInt(16))
+        net.Start("MeshURL")
+        net.WriteInt(ent:EntIndex(), 16)
+        net.WriteString(ent.currentMesh)
+        net.Send(pl)
+    end)
 
     function ENT:SpawnFunction( Ply, Trace, Class )
         if not Trace.Hit then return end
@@ -82,15 +107,21 @@ function ENT:LoadObjFromFile( filepath, forceReload )
 end
 
 function ENT:LoadObjFromURL( url, forceReload )
-    http.Fetch(url, function(body)
-        print("Here is our URL:")
-        print(url)
+    self.currentMesh = url
+    if file.Exists(string.Left(string.Right(url,10), 6) .. ".dat","DATA") then
         local tmpFilepath = string.Left(string.Right(url,10), 6) .. ".dat"
-        print("Here is our temporary file path:")
-        print(tmpFilepath)
-        file.Write(tmpFilepath, body)
         self:LoadObjFromFile(tmpFilepath, forceReload)
-    end)
+    else
+        http.Fetch(url, function(body)
+            print("Here is our URL:")
+            print(url)
+            local tmpFilepath = string.Left(string.Right(url,10), 6) .. ".dat"
+            print("Here is our temporary file path:")
+            print(tmpFilepath)
+            file.Write(tmpFilepath, body)
+            self:LoadObjFromFile(tmpFilepath, forceReload)
+        end)
+    end
     if SERVER then
         net.Start("MeshURL")
         net.WriteInt(self:EntIndex(), 16)
@@ -124,9 +155,18 @@ end
 
 if not CLIENT then return end
 function ENT:ShouldDraw()
+    if not self.requestTimer then self.requestTimer = CurTime() + 2 end
     if not self.Mesh then return false end
-
-    if self.Mesh.Loaded then return true end
+    if self.Mesh.Loaded then 
+        return true 
+    else
+        if CurTime() > self.requestTimer then
+            self.requestTimer = CurTime() + 2
+            net.Start("RequestMesh")
+            net.WriteInt(self:EntIndex(), 16)
+            net.SendToServer()
+        end
+    end
     if self.Mesh.CRC then
         if meshCache[self.Mesh.CRC] then
             for k,v in pairs(meshCache[self.Mesh.CRC]) do
@@ -140,44 +180,26 @@ function ENT:ShouldDraw()
     end
 end
 
+
 function ENT:Draw()
     if not self:ShouldDraw() then return end
 
-    if ClientBall and ClientBall:IsValid() then
-        self.Mesh.Matrix:SetTranslation( self:GetPos() )
-        self.Mesh.Matrix:SetAngles( self:GetAngles() )
+    self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
+    self.Mesh.Matrix:SetTranslation( self:GetPos() )
+    self.Mesh.Matrix:SetAngles( self:GetAngles() )
     
-        render.SetLightingMode( 1 )
-        render.OverrideDepthEnable(true, true)
+    render.SetLightingMode( 1 )
+    render.OverrideDepthEnable(true, true)
     
-        cam.Start3D(_VIEWORIGIN, _VIEWANGLES, 80)
-        for k,v in pairs(self.Mesh.Mesh) do
-            render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
-            cam.PushModelMatrix( self.Mesh.Matrix )
-                v:Draw()
-            cam.PopModelMatrix()
-        end
-        cam.End3D()
-    
-        render.SetLightingMode( 0 )
-        render.OverrideDepthEnable(false, false)
-    else
-        self.Mesh.Matrix:SetTranslation( self:GetPos() )
-        self.Mesh.Matrix:SetAngles( self:GetAngles() )
-    
-        render.SetLightingMode( 1 )
-        render.OverrideDepthEnable(true, true)
-    
-        for k,v in pairs(self.Mesh.Mesh) do
-            render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
-            cam.PushModelMatrix( self.Mesh.Matrix )
-                v:Draw()
-            cam.PopModelMatrix()
-        end
-    
-        render.SetLightingMode( 0 )
-        render.OverrideDepthEnable(false, false)
+    for k,v in pairs(self.Mesh.Mesh) do
+        render.SetMaterial(self.Mesh.Material[k] || self.Mesh.defaultMat)
+        cam.PushModelMatrix( self.Mesh.Matrix )
+            v:Draw()
+        cam.PopModelMatrix()
     end
+    
+    render.SetLightingMode( 0 )
+    render.OverrideDepthEnable(false, false)
 end
 
 

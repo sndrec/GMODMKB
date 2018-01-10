@@ -8,12 +8,10 @@ function LoadLevel(tablename)
 	CurSpawnAng = propTable.spawnData.ang
 	BasePos = Vector(0,0,0)
 	for k, v in pairs(propTable) do
-		if type(v) == "string" then
+		if type(v) == "string" and string.Left(v,4) == "http" then
 			local newMesh = ents.Create("sent_meshtools")
 			newMesh:Spawn()
 			newMesh:LoadObjFromURL(v, true)
-			print("creating new sent_meshtools")
-			print(v)
 			table.insert(curInstancedPropTable, newMesh)
 		end
 	end

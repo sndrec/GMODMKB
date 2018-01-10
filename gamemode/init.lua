@@ -5,7 +5,6 @@ AddCSLuaFile("config/config.lua")
 include('shared.lua')
 
 resource.AddWorkshop("1175000472")
-resource.AddWorkshop("999854920")
 
 util.AddNetworkString("MeshURL")
 

@@ -5,13 +5,19 @@ STATE_LEVELTRANSITION = 3
 STATE_GAMEOVER = 4
 
 local roundTimers = {}
-roundTimers[STATE_WAITINGFORPLAYERS] = 5
-roundTimers[STATE_LEVELTRANSITION] = 5
+roundTimers[STATE_WAITINGFORPLAYERS] = 15
+roundTimers[STATE_LEVELTRANSITION] = 1
 
-local roundInfo = {}
+roundInfo = {}
 roundInfo.curLevel = "MB_W1_L1"
 roundInfo.curState = STATE_WAITINGFORPLAYERS
 roundInfo.curTimer = CurTime() + roundTimers[roundInfo.curState]
+roundInfo.curStageTime = 0
+roundInfo.fallOutZ = -2000
+
+SetGlobalVector("SpinCamOrigin",Vector(0,0,0))
+SetGlobalVector("BallSpawnPos", Vector(0,0,0))
+SetGlobalFloat("SpinCamDist",0)
 
 function GM:Tick()
 	local pls = player.GetAll()
@@ -39,6 +45,7 @@ function GM:Tick()
 				if v.ballEnt and v.ballEnt:IsValid() then
 					v.ballEnt:Remove()
 				end
+				v.nextSpawn = nil
 				self:PlayerSpawnAsSpectator(v)
 			end
 		elseif roundInfo.curState == STATE_LEVELTRANSITION then
@@ -46,6 +53,7 @@ function GM:Tick()
 				if v.ballEnt and v.ballEnt:IsValid() then
 					v.ballEnt:Remove()
 				end
+				v.nextSpawn = nil
 				self:PlayerSpawnAsSpectator(v)
 			end
 			if propTable.nextLevel then
@@ -64,12 +72,50 @@ function GM:Tick()
 				roundInfo.curState = STATE_GAMEOVER
 			end
 		elseif roundInfo.curState == STATE_ROUNDSTARTING then
+			-- HERE IS WHERE THE ROUND BEGINS --
 			roundInfo.curState = STATE_ROUNDACTIVE
-			roundInfo.curTimer = CurTime() + newLevelTimer
-			for i, v in ipairs(pls) do
-				v.playing = true
-				v:Spawn()
+			roundInfo.curTimer = CurTime() + newLevelTimer + 3
+			roundInfo.curStageTime = newLevelTimer
+			allCompleteTimer = 0
+			SetGlobalFloat("LastStartTime", CurTime())
+			local stagePieces = ents.FindByClass("sent_meshtools")
+			local bounds = nil
+			local origin = nil
+			local dist = nil
+			for i, v in ipairs(stagePieces) do
+				local mins, maxs = v:GetCollisionBounds()
+				local tempx = mins.x
+				local tempy = mins.y
+				local tempz = mins.z
+				mins.x = tempx
+				mins.y = -tempz
+				mins.z = tempy
+				tempx = maxs.x
+				tempy = maxs.y
+				tempz = maxs.z
+				maxs.x = tempx
+				maxs.y = -tempz
+				maxs.z = tempy
+				origin = (mins + maxs) * 0.5
+				bounds = origin + maxs
+				dist = origin:Distance(maxs) * 2
+				print(mins, maxs)
 			end
+			print("Starting Cam Info\n-------------")
+			print(origin)
+			print(dist)
+			print("------------")
+			SetGlobalVector("SpinCamOrigin",origin + Vector(0,0,-bounds.z * 0.5))
+			SetGlobalVector("BallSpawnPos", CurSpawnPos)
+			SetGlobalFloat("SpinCamDist", dist)
+			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z) + 200)
+			timer.Simple(2.4, function()
+				for i, v in ipairs(pls) do
+					v.nextSpawn = nil
+					v.playing = true
+					v:Spawn()
+				end
+			end)
 		elseif roundInfo.curState == STATE_GAMEOVER then
 			-- THIS IS JUST TEMPORARY FOR TESTING --
 			roundInfo.curState = STATE_WAITINGFORPLAYERS
@@ -99,7 +145,7 @@ function GM:Tick()
 		if hasntCompleted == 0 then
 			if not allCompleteTimer then allCompleteTimer = 0 end
 			allCompleteTimer = allCompleteTimer + 1
-			if allCompleteTimer > 120 then
+			if allCompleteTimer > 200 then
 				roundInfo.curTimer = CurTime()
 				for i, v in ipairs(pls) do
 					v:ChatPrint("Everyone beat the level.")
