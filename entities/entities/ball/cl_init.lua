@@ -53,6 +53,8 @@ function ENT:Initialize()
 --			['$basetexture'] = texture2,
 --		});		
 	end
+	self:GetOwner():SetNoDraw(true)
+	self:GetOwner().clientBall = self
 	self.baseAngle = Angle(0,0,0)
 	self.netTimer = CurTime() + 0.25
 
@@ -75,14 +77,32 @@ function ENT:Draw()
 		rotAngle:RotateAroundAxis(rotAx:Forward(),_ROTOFFSET.r)
 		rotAngle:RotateAroundAxis(rotAx:Right(),-_ROTOFFSET.p - ballViewAng.p - 15)
 		self.rotAngle = rotAngle
+		--cam.Start2D()
+		--surface.SetDrawColor(0,0,0,150)
+		--draw.Circle( 256, 256, 256, 256, 32 )
+		--surface.SetDrawColor(255,255,255,255)
+		--surface.DrawRect((self.SideMove * 2.56) + 256,(-self.ForwardMove * 2.56) + 256,8,8)
+		--cam.End2D()
+	else
+		cam.Start2D()
+		local posTable = (self:GetPos() + Vector(0,0,30)):ToScreen()
+		draw.SimpleTextOutlined(self:GetOwner():Nick(),"DermaLarge",posTable.x,posTable.y - 30,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,1,Color(0,0,0))
+		cam.End2D()
 	end
 	self:DrawModel()
+
+	if self:GetOwner().clientBall and self:GetOwner().clientBall == self and self:GetOwner().clientBall:IsValid() then
+		self:GetOwner():SetPos(self:GetPos() - Vector(0,0,23))
+		self:GetOwner():SetRenderOrigin(self:GetPos() - Vector(0,0,23))
+		self:GetOwner():SetAngles(self:GetOwner():EyeAngles())
+		self:GetOwner():DrawModel()
+	end
 
 end
 
 function ENT:Think()
 	if self:GetOwner() == LocalPlayer() and CurTime() > self.netTimer then
-		self.netTimer = CurTime() + 0.1
+		self.netTimer = CurTime() + 0.05
 		net.Start("GetViewAngle")
 		net.WriteAngle(ballViewAng)
 		net.SendToServer()
@@ -92,31 +112,67 @@ end
 local tiltIntensity = CreateConVar( "mb_tiltintensity", 0.15, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Intensity of world tilt when moving around the level." )
 local camUp = CreateConVar( "mb_camUp", 50, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Upward camera offset" )
 local camDistance = CreateConVar( "mb_camDistance", 200, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE, "Camera Distance" )
+victory = 0
+
+net.Receive("Victory", function()
+	victory = net.ReadInt(8)
+end)
 
 local function MyCalcView( pl, pos, angles, fov )
 	local view = {}
 
-	--
+	if victory == 1 then
+		if ClientBall == nil or not ClientBall:IsValid() then return end
+
+		local desiredAim = (ClientBall:GetPos() - _VIEWORIGIN):GetNormalized()
+		local vel = ClientBall:GetVelocity()
+		vel = -vel
+
+		oldAng = desiredAim:Angle()
+		newAng = LerpAngle(FrameTime() * math.min(vel:Length(), 750) * 0.01,oldAng,vel:Angle())
+
+		_VIEWORIGIN = ClientBall:GetPos() - (newAng:Forward() * camDistance:GetFloat())
+		_VIEWANGLES = newAng
+
+		view.origin = _VIEWORIGIN
+		view.angles = _VIEWANGLES
+		view.fov = 80
+		view.drawviewer = true
+		return view
+	elseif victory == 2 then
+		if ClientBall == nil or not ClientBall:IsValid() then return end
+
+		local desiredAim = (ClientBall:GetPos() - _VIEWORIGIN):GetNormalized()
+		_VIEWANGLES = (desiredAim + (_VIEWANGLES:Forward() * 0.333)):Angle()
+
+		view.origin = _VIEWORIGIN
+		view.angles = _VIEWANGLES
+		view.fov = 80
+		view.drawviewer = true
+		return view
+	end
 	local StartTime = GetGlobalFloat("LastStartTime", 0)
 
-	if StartTime + 2.42 > CurTime() then
+	if StartTime + 3.42 > CurTime() then
 		local SpinCamOrigin = GetGlobalVector("SpinCamOrigin",Vector(0,0,0))
 		local BallSpawnPos = GetGlobalVector("BallSpawnPos", Vector(0,0,0))
 		local SpinCamDist = GetGlobalFloat("SpinCamDist", 1000)
 		debugoverlay.Cross(SpinCamOrigin,32,0.05,Color( 255, 0, 0 ),true)
-		local lerp = ((StartTime + 2.4) - CurTime()) / 2.4
+		local lerp = ((StartTime + 3.4) - CurTime()) / 3.4
 		local smoothLerp = 1 - ((math.sin((math.Clamp(lerp * 1.5, 0, 1) * math.pi) - (math.pi * 0.5)) + 1) * 0.5)
+		local smoothLerp2 = 1 - ((math.sin((math.Clamp(lerp * 1.1, 0, 1) * math.pi) - (math.pi * 0.5)) + 1) * 0.5)
 
-		local CamPosBase = SpinCamOrigin - (Angle(30,(lerp * 135),0):Forward() * SpinCamDist)
-		local CamAngle = Angle(30,(lerp * 135),0)
+		print(smoothLerp)
+		local CamPosBase = SpinCamOrigin - (Angle(30,(lerp * 200) - 10,0):Forward() * ((SpinCamDist * 1) + (SpinCamDist * lerp * 0.25)))
+		local CamAngle = Angle(30,(lerp * 200) - 10,0)
 		local camupReal = camUp:GetFloat()
 		local camsideReal = camDistance:GetFloat()
 
 		local finalCamAngle = Angle(15,0,0)
 		local finalCamPos = BallSpawnPos - ( finalCamAngle:Forward() * camsideReal) + ( finalCamAngle:Up() * camupReal ) - Vector(0,0,25)
 
-		local lerpCamPos = LerpVector(smoothLerp,CamPosBase,finalCamPos)
-		local lerpCamAngle = LerpAngle(smoothLerp,CamAngle,Angle(0,0,0))
+		local lerpCamPos = LerpVector(smoothLerp2,CamPosBase,finalCamPos)
+		local lerpCamAngle = LerpAngle(smoothLerp2,CamAngle,Angle(0,0,0))
 		
 		view.origin = lerpCamPos
 		view.angles = lerpCamAngle
@@ -129,16 +185,14 @@ local function MyCalcView( pl, pos, angles, fov )
 	rotOffset = Angle(rotOffset.p / ((10 * FrameTime()) + 1),rotOffset.y / ((16 * FrameTime()) + 1),rotOffset.r / ((16 * FrameTime()) + 1))
 	
 	if ClientBall.ForwardMove ~= nil then
-		local rotP = -(ClientBall.ForwardMove * tiltIntensity:GetFloat()) * FrameTime()
-		local rotR = -(ClientBall.SideMove * tiltIntensity:GetFloat()) * FrameTime()
+		local rotP = -(ClientBall.ForwardMove * tiltIntensity:GetFloat() * 10) * FrameTime()
+		local rotR = -(ClientBall.SideMove * tiltIntensity:GetFloat() * 10) * FrameTime()
 	
 		rotOffset = rotOffset + Angle(rotP,0,rotR)
 	
 		--print(ClientBall.ForwardMove, ClientBall.SideMove)
 		--print(ClientBall.MoveData)
 	end
-
-	pl:SetPos(ClientBall:GetPos() - Vector(0,0,32))
 
 	local p = ballViewAng.p
 	local y = ballViewAng.y

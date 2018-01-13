@@ -4,6 +4,7 @@ AddCSLuaFile( "shared.lua" )  -- and shared scripts are sent.
 include("shared.lua")
 util.AddNetworkString( "GetViewAngle" )
 util.AddNetworkString( "SyncSkyCam" )
+util.AddNetworkString( "Victory" )
 
 function ENT:Initialize( )
  
@@ -36,7 +37,12 @@ function ENT:Initialize( )
 	self:SetColor(Color(200,255,255,255))
 	self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	self:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
+    self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
 
+end
+
+function ENT:UpdateTransmitState()
+    return TRANSMIT_ALWAYS
 end
 
 function ENT:PhysicsCollide( data, physobj )
@@ -56,10 +62,8 @@ function ENT:PhysicsCollide( data, physobj )
 		efdata:SetRadius(2)
 		efdata:SetScale(2)
 		util.Effect("Sparks",efdata2)
-		print("large impact")
 		self:EmitSound("monkeyball/fx_ball_hit_hard.wav",80,math.random(95,105), 0.5)
 	elseif dot > 400 then
-		print("med impact")
 		local efdata = EffectData()
 		efdata:SetOrigin(data.HitPos)
 		efdata:SetMagnitude(2)
@@ -69,7 +73,6 @@ function ENT:PhysicsCollide( data, physobj )
 		util.Effect("ElectricSpark",efdata)
 		self:EmitSound("monkeyball/fx_ball_hit_med.wav",80,math.random(95,105), 0.5)
 	elseif dot > 200 then
-		print("small impact")
 		self:EmitSound("monkeyball/fx_ball_hit_soft.wav",80,math.random(95,105), 0.5)
 	end
 
@@ -91,6 +94,20 @@ function ENT:Think()
 	if pl:Health() <= 0 then
 		self:Remove()
 	end
+	if self.victory then
+		if CurTime() < self.victoryTime + 1.75 then
+			self.physObj:SetVelocity(self.physObj:GetVelocity() - (self.physObj:GetVelocity() * FrameTime() * 20))
+		else
+			self.physObj:SetVelocity(self.physObj:GetVelocity() + Vector(0,0,20000 * FrameTime()))
+		end
+		if CurTime() > self.victoryTime + 3.5 then
+			net.Start("Victory")
+			net.WriteBool(false)
+			net.Send(pl)
+			self:Remove()
+		end
+		return
+	end
 
 	local plOldVel = pl:GetVelocity()
 	local ballVel = self:GetVelocity()
@@ -102,9 +119,9 @@ function ENT:Think()
 		filter = {self, pl}
 		})
 
-	pl:SetPos(self:GetPos() - Vector(0,0,25))
+	pl:SetPos(self:GetPos() - Vector(0,0,23))
 
-	local accelSpeed = 5
+	local accelSpeed = 4.5
 	local moveVector = Vector(0,0,0)
 	local moveNormal = self:GetVelocity():Angle()
 	moveNormal.p = 0
@@ -118,7 +135,7 @@ function ENT:Think()
 	tempMove.p = 0
 	debugoverlay.Cross( self:GetPos() + tempMove:Forward() * 200, 16, 0.1, Color(255,255,255), true )
 
-	moveVector = (self.moveData / 1000) * accelSpeed
+	moveVector = self.moveData * accelSpeed
 
 	local oldEyeAng = pl:EyeAngles()
 	local newEyeAng = self.ballViewAng
@@ -140,9 +157,8 @@ function ENT:Think()
 			self:EmitSound("monkeyball/fx_ball_roll.wav",60,(speed * 0.075) + 50, 1)
 			local warbleFormula = 1 / ((speed * 0.0036) + 1.5)
 			self.nextWarble = CurTime() + warbleFormula
-			print( warbleFormula)
 		end
-		if self.groundTimer > 0.1 and speed > 700 and CurTime() > self.sparkTimer then
+		if self.groundTimer > 0.1 and speed > 950 and CurTime() > self.sparkTimer then
 			self.sparkTimer = CurTime() + 0.05
 			local inc = math.min((speed - 700) * 0.002, 1)
 			local efdata = EffectData()
@@ -181,12 +197,26 @@ function ENT:Think()
 			util.Effect("balloon_pop",effectData)
 		end
 		for i, v in ipairs(player.GetAll()) do
-			v:ChatPrint(pl:Nick() .. " beat the stage in " .. math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) .. " seconds.")
+			v:ChatPrint(pl:Nick() .. " beat the stage in " .. math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1 .. " seconds.")
 		end
 		pl:ChatPrint("Your completion time from spawn was " .. math.Round(CurTime() - self.spawnTime, 2) - 0.60 .. " seconds.")
-		pl.newPos = pl.ballEnt:GetPos() - (pl.ballEnt.ballViewAng:Forward() * 400) + Vector(0,0,80)
-		self:Remove()
-		pl:SetPos(pl.newPos)
+		pl.victory = true
+		self.victory = true
+		self.victoryTime = CurTime()
+		net.Start("Victory")
+		net.WriteInt(1, 8)
+		net.Send(pl)
+		timer.Simple(1.75, function()
+			net.Start("Victory")
+			net.WriteInt(2, 8)
+			net.Send(pl)
+			self:EmitSound("monkeyball/fx_ball_woosh.wav",80,100, 0.4)
+		end)
+		timer.Simple(3.5, function()
+			net.Start("Victory")
+			net.WriteInt(0, 8)
+			net.Send(pl)
+		end)
 	end
 
 	self.oldPos = self:GetPos()

@@ -65,6 +65,13 @@ end
 -- Meshtools Base Entity Serverside
 -----------------------------------------------------------------------
 
+function ENT:SetupDataTables()
+
+    self:NetworkVar( "Vector", 0, "RealPos" );
+    self:NetworkVar( "Angle", 0, "RealAng" );
+
+end
+
 if SERVER then
 
     function ENT:UpdateTransmitState()
@@ -140,7 +147,38 @@ net.Receive("MeshURL", function()
     end)
 end)
 
+
 function ENT:Think()
+    if SERVER and self.animTable and self.spawnTime then
+        if not self.shadowInitialized then
+            self:MakePhysicsObjectAShadow(false, false)
+            self.shadowInitialized = true
+            self.currentItem = 1
+            self.lastTime = 0
+            self.nextFrameTime = CurTime() + self.animTable[1].time
+        end
+        if CurTime() > self.nextFrameTime then
+            self.lastPos = self.animTable[self.currentItem].pos
+            self.lastAng = self.animTable[self.currentItem].ang
+            self.lastTime = self.animTable[self.currentItem].time / 60
+            self.currentItem = self.currentItem + 1
+            self.nextFrameTime = CurTime() + ((self.animTable[self.currentItem].time / 60) - self.lastTime)
+            --print("Keyframe " .. self.currentItem)
+            --print(self.lastTime, self.nextFrameTime, CurTime())
+            --print(self.animTable[self.currentItem].pos, self.animTable[self.currentItem].ang)
+            --print(self:GetPhysicsObject():GetPos(), self:GetPhysicsObject():GetAngles())
+            local time = ((self.animTable[self.currentItem].time / 60) - self.lastTime)
+            print("ah")
+        end
+        local lerp = 1 - (self.nextFrameTime - CurTime()) / ((self.animTable[self.currentItem].time / 60) - self.lastTime)
+        local newPos = LerpVector(lerp,self.lastPos,self.animTable[self.currentItem].pos)
+        local newAng = LerpAngle(lerp,self.lastAng,self.animTable[self.currentItem].ang)
+        self:GetPhysicsObject():UpdateShadow(newPos, newAng + Angle(0,0,90), FrameTime() )
+        self:SetRealPos(newPos)
+        self:SetRealAng(newAng)
+    end
+    self:NextThink(CurTime())
+
     if self.Mesh.Phys then return true end
     if self.Mesh.CRC && meshCache[self.Mesh.CRC] then
         if SERVER then
@@ -185,8 +223,8 @@ function ENT:Draw()
     if not self:ShouldDraw() then return end
 
     self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
-    self.Mesh.Matrix:SetTranslation( self:GetPos() )
-    self.Mesh.Matrix:SetAngles( self:GetAngles() )
+    self.Mesh.Matrix:SetTranslation( self:GetRealPos() )
+    self.Mesh.Matrix:SetAngles( self:GetRealAng() + Angle(0,0,90) )
     
     render.SetLightingMode( 1 )
     render.OverrideDepthEnable(true, true)

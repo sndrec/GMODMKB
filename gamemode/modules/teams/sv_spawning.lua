@@ -5,6 +5,7 @@ function GM:PlayerSpawn(pl)
 		pl:SetPos(Vector(0,0,500))
 		return
 	end
+	pl.nextSpawn = nil
 	pl:SetObserverMode(OBS_MODE_NONE)
 	pl:SetTeam(TEAM_PLAYERS)
 	local ball = ents.Create("ball")
@@ -20,9 +21,9 @@ function GM:PlayerSpawn(pl)
 	pl.ballEnt = ball
 	ball:Spawn()
 	ball.ballViewAng = CurSpawnAng
-	pl:SetMaxSpeed( 1000 )
-	pl:SetWalkSpeed( 1000 )
-	pl:SetRunSpeed( 1000 )
+	pl:SetMaxSpeed( 100 )
+	pl:SetWalkSpeed( 100 )
+	pl:SetRunSpeed( 100 )
 	ball:SetCustomCollisionCheck(true)
 
 	--pl:SetRenderMode(RENDERMODE_NONE)
@@ -44,6 +45,8 @@ function GM:PlayerSpawn(pl)
 	for i, v in ipairs(ents.FindByModel("models/monkeyball/goalTrigger.mdl")) do
 		constraint.NoCollide( pl.ballEnt, v, 0, 0 )
 	end
+	pl:SetModel("models/kleiner.mdl")
+	pl:SetNoDraw(true)
 end
 
 function GM:PlayerInitialSpawn(pl)

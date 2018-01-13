@@ -5,11 +5,13 @@ STATE_LEVELTRANSITION = 3
 STATE_GAMEOVER = 4
 
 local roundTimers = {}
-roundTimers[STATE_WAITINGFORPLAYERS] = 15
+roundTimers[STATE_WAITINGFORPLAYERS] = 1
 roundTimers[STATE_LEVELTRANSITION] = 1
 
+local startLevel = "MB_W1_L1"
+
 roundInfo = {}
-roundInfo.curLevel = "MB_W1_L1"
+roundInfo.curLevel = startLevel
 roundInfo.curState = STATE_WAITINGFORPLAYERS
 roundInfo.curTimer = CurTime() + roundTimers[roundInfo.curState]
 roundInfo.curStageTime = 0
@@ -77,12 +79,14 @@ function GM:Tick()
 			roundInfo.curTimer = CurTime() + newLevelTimer + 3
 			roundInfo.curStageTime = newLevelTimer
 			allCompleteTimer = 0
+			lastStartTime = CurTime()
 			SetGlobalFloat("LastStartTime", CurTime())
 			local stagePieces = ents.FindByClass("sent_meshtools")
 			local bounds = nil
 			local origin = nil
 			local dist = nil
 			for i, v in ipairs(stagePieces) do
+				v.spawnTime = CurTime()
 				local mins, maxs = v:GetCollisionBounds()
 				local tempx = mins.x
 				local tempy = mins.y
@@ -109,7 +113,7 @@ function GM:Tick()
 			SetGlobalVector("BallSpawnPos", CurSpawnPos)
 			SetGlobalFloat("SpinCamDist", dist)
 			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z) + 200)
-			timer.Simple(2.4, function()
+			timer.Simple(3.4, function()
 				for i, v in ipairs(pls) do
 					v.nextSpawn = nil
 					v.playing = true
@@ -119,7 +123,7 @@ function GM:Tick()
 		elseif roundInfo.curState == STATE_GAMEOVER then
 			-- THIS IS JUST TEMPORARY FOR TESTING --
 			roundInfo.curState = STATE_WAITINGFORPLAYERS
-			roundInfo.curLevel = "MB_W1_L1"
+			roundInfo.curLevel = startLevel
 			roundInfo.curTimer = CurTime() + roundTimers[roundInfo.curState]
 			for i, v in ipairs(pls) do
 				v:ChatPrint("Restarting world")
@@ -142,10 +146,10 @@ function GM:Tick()
 				v.nextSpawn = nil
 			end
 		end
-		if hasntCompleted == 0 then
+		if hasntCompleted == 0 and CurTime() > lastStartTime + 3 then
 			if not allCompleteTimer then allCompleteTimer = 0 end
-			allCompleteTimer = allCompleteTimer + 1
-			if allCompleteTimer > 200 then
+			allCompleteTimer = allCompleteTimer + FrameTime()
+			if allCompleteTimer > 1 then
 				roundInfo.curTimer = CurTime()
 				for i, v in ipairs(pls) do
 					v:ChatPrint("Everyone beat the level.")

@@ -17,10 +17,11 @@ function GM:PostDraw2DSkyBox()
 	render.OverrideDepthEnable( true, false )
 	cam.Start3D( Vector( 0, 0, 0 ), _VIEWANGLES )
 		render.SetColorMaterial()
-		render.DrawQuadEasy( _VIEWANGLES:Forward() * 128, -_VIEWANGLES:Forward(), 256, 256, Color( 200, 230, 255 ), 0 )
+		render.DrawQuadEasy( _VIEWANGLES:Forward() * 128, -_VIEWANGLES:Forward(), 512, 512, Color( 200, 230, 255 ), 0 )
 	cam.End3D()
 	render.OverrideDepthEnable( false, false )
 end
+
 
 net.Receive("SyncSkyCam", function()
 	skyCamPos = net.ReadVector()
