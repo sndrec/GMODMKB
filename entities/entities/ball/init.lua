@@ -5,11 +5,12 @@ include("shared.lua")
 util.AddNetworkString( "GetViewAngle" )
 util.AddNetworkString( "SyncSkyCam" )
 util.AddNetworkString( "Victory" )
+resource.AddFile("maps/" .. game.GetMap() .. ".bsp")
 
 function ENT:Initialize( )
  
 	self:SetModel( "models/XQM/Rails/gumball_1.mdl" )
-	self:PhysicsInitSphere( 24, "metal_bouncy" )
+	self:PhysicsInitSphere( 24, "gmod_ice" )
 	self.physObj = self:GetPhysicsObject()
 	self.groundTimer = 0
 	self.spawnTime = CurTime()
@@ -38,6 +39,7 @@ function ENT:Initialize( )
 	self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	self:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
     self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
+    self:SetFriction(0.00001)
 
 end
 
@@ -49,6 +51,7 @@ function ENT:PhysicsCollide( data, physobj )
 
 	local oldVel = data.OurOldVelocity
 	local hitNormal = data.HitNormal
+	local newVel = physobj:GetVelocity()
 
 	local dot = oldVel:Dot(hitNormal)
 	if dot > 600 then
@@ -76,10 +79,10 @@ function ENT:PhysicsCollide( data, physobj )
 		self:EmitSound("monkeyball/fx_ball_hit_soft.wav",80,math.random(95,105), 0.5)
 	end
 
-	local mult = 1.25 + (math.min(math.max(dot - 200, 0), 500) / 2000)
+	local mult = 0.25 + (math.min(math.max(dot - 200, 0), 500) / 2000)
 	local impulse = dot * -mult
 
-	physobj:SetVelocity(oldVel + (impulse * hitNormal))
+	physobj:SetVelocity(newVel + (impulse * hitNormal))
 end
 
 net.Receive( "GetViewAngle", function( len, pl )
@@ -88,17 +91,49 @@ net.Receive( "GetViewAngle", function( len, pl )
 	end
 end )
 
+function ENT:CalcBallViewAng()
+	local p = self.ballViewAng.p
+	local y = self.ballViewAng.y
+	local r = self.ballViewAng.r
+
+	local tempVel = self:GetVelocity()
+	if tempVel.z > 0 then
+		tempVel.z = (tempVel.z / 1.5) - 50
+	end
+	if tempVel.z > -100 and tempVel.z < 100 then tempVel.z = 0 end
+	local tempVelAngle = tempVel:Angle()
+
+	if tempVel:Length() < 50 then
+		tempVelAngle.p = 0
+	end
+
+	local len = tempVel:Length()
+	local len2D = tempVel:Length()
+	if CurTime() > self.spawnTime + 0.6 then
+		tempVelAngle.p = math.Clamp(math.NormalizeAngle(tempVelAngle.p), -60, 60)
+		p = math.ApproachAngle( p, tempVelAngle.p, math.max(len * math.abs(math.AngleDifference( p, tempVelAngle.p ) / 100) * FrameTime(), FrameTime() * math.abs(math.AngleDifference( p, tempVelAngle.p )) ) )
+		offset = 1 - (math.sin((math.max(p, 0) / 120) * (math.pi / 2)) * 0.8)
+	else
+		p = -15
+	end
+	y = math.ApproachAngle( y, tempVelAngle.y, math.min(len2D * math.abs(math.AngleDifference( y, tempVelAngle.y ) / 45) * FrameTime(), 150 * FrameTime() ) )
+	r = math.ApproachAngle( r, tempVelAngle.r, math.max(len2D * math.abs(math.AngleDifference( r, tempVelAngle.r ) / 180) * FrameTime(), 1 * FrameTime() ) )
+
+	self.ballViewAng = Angle(p,y,r)
+end
+
 function ENT:Think()
 	local pl = self:GetOwner()
 	if not pl:IsValid() then self:Remove() return end
 	if pl:Health() <= 0 then
 		self:Remove()
 	end
+	self:CalcBallViewAng()
 	if self.victory then
 		if CurTime() < self.victoryTime + 1.75 then
-			self.physObj:SetVelocity(self.physObj:GetVelocity() - (self.physObj:GetVelocity() * FrameTime() * 20))
+			self.physObj:SetVelocity(self.physObj:GetVelocity() - (self.physObj:GetVelocity() * engine.TickInterval() * 3))
 		else
-			self.physObj:SetVelocity(self.physObj:GetVelocity() + Vector(0,0,20000 * FrameTime()))
+			self.physObj:SetVelocity(self.physObj:GetVelocity() + Vector(0,0,2000 * engine.TickInterval()))
 		end
 		if CurTime() > self.victoryTime + 3.5 then
 			net.Start("Victory")
@@ -106,7 +141,8 @@ function ENT:Think()
 			net.Send(pl)
 			self:Remove()
 		end
-		return
+		self:NextThink( CurTime() )
+		return true
 	end
 
 	local plOldVel = pl:GetVelocity()
@@ -121,7 +157,7 @@ function ENT:Think()
 
 	pl:SetPos(self:GetPos() - Vector(0,0,23))
 
-	local accelSpeed = 4.5
+	local accelSpeed = 4.3
 	local moveVector = Vector(0,0,0)
 	local moveNormal = self:GetVelocity():Angle()
 	moveNormal.p = 0
@@ -141,16 +177,19 @@ function ENT:Think()
 	local newEyeAng = self.ballViewAng
 	pl:SetEyeAngles( Angle(oldEyeAng.p, newEyeAng.y, 0) )
 
+	local groundVel = Vector(0,0,0)
+
 	if onGround.Hit then
+		groundVel = onGround.Entity:GetVelocity()
 		if self.groundTimer == 0 and CurTime() > self.lastLanding then
 			self.lastLanding = CurTime() + 1
 			self:EmitSound("monkeyball/fx_ball_initialroll.wav",75,100, 0.25)
 			self:EmitSound("monkeyball/fx_ball_warble.wav",75,100, 0.35)
 		end
 		local vel = self.physObj:GetVelocity()
-		local frictionCoefficient = 0.60
-		self.physObj:SetVelocity(vel / (1 + (frictionCoefficient * FrameTime())))
-		self.groundTimer = self.groundTimer + FrameTime()
+		local frictionCoefficient = 0.6
+		self.physObj:SetVelocity(vel / (1 + (frictionCoefficient * engine.TickInterval())))
+		self.groundTimer = self.groundTimer + engine.TickInterval()
 
 		local speed = vel:Length()
 		if CurTime() > self.nextWarble and self.groundTimer > 0.1 and speed > 100 then
@@ -175,7 +214,7 @@ function ENT:Think()
 
 	local gravDir = Vector(0,0,-9.8) + moveVector
 	gravDir = gravDir:GetNormalized()
-	self.physObj:SetVelocity(self.physObj:GetVelocity() + (gravDir * 1750 * FrameTime()))
+	self.physObj:SetVelocity(self.physObj:GetVelocity() + (gravDir * 1750 * engine.TickInterval()) + (groundVel * engine.TickInterval() * 0.65))
 
 	local goalTrace = nil
 	if not self.oldPos then
@@ -187,19 +226,15 @@ function ENT:Think()
 			collisiongroup = COLLISION_GROUP_PROJECTILE
 		})
 	end
-	if goalTrace and goalTrace.Hit then
+	if goalTrace and goalTrace.Hit and goalTrace.Entity.goalTrigger then
 		pl:ChatPrint("You beat the level.")
 		local goal = goalTrace.Entity
 		goal:EmitSound("monkeyball/fx_goaltape.wav",90,math.random(95,105), 1)
-		local effectData = EffectData()
-		for i = 1, 4, 1 do
-			effectData:SetOrigin(goal:GetPos() + Vector(0,0,60))
-			util.Effect("balloon_pop",effectData)
-		end
 		for i, v in ipairs(player.GetAll()) do
 			v:ChatPrint(pl:Nick() .. " beat the stage in " .. math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1 .. " seconds.")
 		end
 		pl:ChatPrint("Your completion time from spawn was " .. math.Round(CurTime() - self.spawnTime, 2) - 0.60 .. " seconds.")
+		WriteLeaderboardEntry(pl, roundInfo.curLevel, math.Round(CurTime() - self.spawnTime, 2) - 0.60)
 		pl.victory = true
 		self.victory = true
 		self.victoryTime = CurTime()

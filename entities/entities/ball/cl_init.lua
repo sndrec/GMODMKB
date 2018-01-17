@@ -53,6 +53,7 @@ function ENT:Initialize()
 --			['$basetexture'] = texture2,
 --		});		
 	end
+    self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
 	self:GetOwner():SetNoDraw(true)
 	self:GetOwner().clientBall = self
 	self.baseAngle = Angle(0,0,0)
@@ -65,6 +66,7 @@ function ENT:Draw()
 	local fakeVel = self:GetVelocity()
 	self.baseAngle:RotateAroundAxis(-fakeVel:Angle():Right(),fakeVel:Length() * FrameTime() * 1.5)
 	self:SetRenderAngles(self.baseAngle)
+	
 	if self:GetModelScale() ~= 1.75 then
 		self:SetModelScale(1.75,0)
 	end
@@ -94,7 +96,18 @@ function ENT:Draw()
 	if self:GetOwner().clientBall and self:GetOwner().clientBall == self and self:GetOwner().clientBall:IsValid() then
 		self:GetOwner():SetPos(self:GetPos() - Vector(0,0,23))
 		self:GetOwner():SetRenderOrigin(self:GetPos() - Vector(0,0,23))
-		self:GetOwner():SetAngles(self:GetOwner():EyeAngles())
+		if self:GetOwner() == LocalPlayer() then
+			local newAng = Angle(0, ballViewAng.y, 0)
+			self:GetOwner():SetEyeAngles(newAng)
+			self:GetOwner():SetAngles(newAng)
+			self:GetOwner():SetRenderAngles(newAng)
+		else
+			local velAng = self:GetVelocity():Angle()
+			velAng.p = 0
+			self:GetOwner():SetEyeAngles(velAng)
+			self:GetOwner():SetAngles(velAng)
+			self:GetOwner():SetRenderAngles(velAng)
+		end
 		self:GetOwner():DrawModel()
 	end
 
@@ -102,7 +115,7 @@ end
 
 function ENT:Think()
 	if self:GetOwner() == LocalPlayer() and CurTime() > self.netTimer then
-		self.netTimer = CurTime() + 0.05
+		self.netTimer = CurTime() + 0.2
 		net.Start("GetViewAngle")
 		net.WriteAngle(ballViewAng)
 		net.SendToServer()

@@ -6,6 +6,60 @@ end
 hook.Add("HUDShouldDraw", "HUDShouldDrawHide", hidehud)
 
 
+surface.CreateFont( "DermaScaleSmall", {
+	font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+	extended = false,
+	size = 0.033 * ScrH(),
+	weight = 500,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
+surface.CreateFont( "DermaScaleMed", {
+	font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+	extended = false,
+	size = 0.066 * ScrH(),
+	weight = 500,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
+surface.CreateFont( "DermaScaleLarge", {
+	font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+	extended = false,
+	size = 0.1 * ScrH(),
+	weight = 500,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
 function draw.Heart(x, y, scale)
 	scale = scale or 1
 	local heart = {}
@@ -67,3 +121,68 @@ end
 function GM:OnContextMenuOpen()
 	return false
 end
+
+net.Receive("CreateClientText", function()
+
+	local textTable = {}
+	textTable.text = net.ReadString()
+	textTable.time = net.ReadFloat()
+	textTable.spawnTime = CurTime()
+	textTable.font = net.ReadString()
+	textTable.x = net.ReadFloat()
+	textTable.y = net.ReadFloat()
+	textTable.color = net.ReadColor()
+	table.insert(serverClientTextTable, textTable)
+
+end)
+
+serverClientTextTable = {}
+
+net.Receive("CreateTip", function()
+
+	--print("got tip")
+	local textTable = {}
+	textTable.text = net.ReadString()
+	textTable.time = CurTime()
+	table.insert(serverTipTextTable, textTable)
+
+end)
+
+serverTipTextTable = {}
+
+hook.Add("HUDPaint", "DrawServerText", function()
+
+	for i = #serverClientTextTable, 1, -1 do
+		local fadeIn = math.min((CurTime() - serverClientTextTable[i].spawnTime) * 20, 1)
+		local fadeOut = math.max(((CurTime() + 1) - serverClientTextTable[i].time) * 10, 0)
+		local alpha = (fadeIn - fadeOut) * 255
+		--print(fadeIn, fadeOut)
+		draw.SimpleTextOutlined(serverClientTextTable[i].text,serverClientTextTable[i].font,ScrW() * serverClientTextTable[i].x,ScrH() * serverClientTextTable[i].y,Color(serverClientTextTable[i].color.r, serverClientTextTable[i].color.g, serverClientTextTable[i].color.b, alpha),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0, alpha))
+		if CurTime() > serverClientTextTable[i].time then table.remove(serverClientTextTable, i) end
+	end
+
+end)
+
+hook.Add("HUDPaint", "DrawTipText", function()
+
+	local tipHeight = ScrH() * 0.3
+
+	for i = #serverTipTextTable, 1, -1 do
+
+		local slideIn = math.sin(math.min((CurTime() - serverTipTextTable[i].time) * 2, 1.571))
+		local slideOut = math.sin(math.max((CurTime() - (serverTipTextTable[i].time + 5)) * 2, 0))
+		local posX = -ScrW() + ((slideIn - slideOut) * ScrW())
+
+		surface.SetFont( "DermaLarge" )
+		local sx, sy = surface.GetTextSize( serverTipTextTable[i].text )
+		local sx2, sy2 = surface.GetTextSize( "Tip:" )
+		surface.SetDrawColor(0,0,0,160 * (slideIn - (slideOut * 3)))
+		surface.DrawRect(0,tipHeight - (sy2 + 4) - 2,sx2 + 8,sy2 + 4)
+		draw.SimpleText("Tip:","DermaLarge",2,tipHeight - (sy2 + 4),Color(255,255,255,255 * (slideIn - (slideOut * 3))),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		surface.SetDrawColor(0,0,0,160)
+		surface.DrawRect(posX - 4,tipHeight - 2,sx + 8,sy + 4)
+		draw.SimpleText(serverTipTextTable[i].text,"DermaLarge",posX,tipHeight,Color(255,255,255),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		if CurTime() > serverTipTextTable[i].time + 5.5 then table.remove(serverTipTextTable, i) end
+	end
+
+end)

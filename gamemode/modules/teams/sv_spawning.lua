@@ -45,7 +45,7 @@ function GM:PlayerSpawn(pl)
 	for i, v in ipairs(ents.FindByModel("models/monkeyball/goalTrigger.mdl")) do
 		constraint.NoCollide( pl.ballEnt, v, 0, 0 )
 	end
-	pl:SetModel("models/kleiner.mdl")
+	pl:SetModel("models/combine_soldier.mdl")
 	pl:SetNoDraw(true)
 end
 

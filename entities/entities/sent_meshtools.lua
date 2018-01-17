@@ -21,15 +21,15 @@ local meshtools = meshtools
 
 local matTable = {}
 matTable["W1"] = {}
-matTable["W1"]["check"] = Material("monkeyball/tex1_256x256_m_5fa7688318397a55_14.png", "noclamp smooth mips")
-matTable["W1"]["check2"] = Material("monkeyball/tex1_256x256_m_5e303c7e6163e11b_14_mip1.png", "noclamp smooth mips")
-matTable["W1"]["check3"] = Material("monkeyball/tex1_256x256_m_6be1f1d9f4769ab4_14.png", "noclamp smooth mips")
-matTable["W1"]["fill"] = Material("monkeyball/tex1_256x256_m_f6cb8c76c35f0e99_14.png", "noclamp smooth mips")
-matTable["W1"]["wood"] = Material("monkeyball/tex1_256x256_m_f6cb8c76c35f0e99_14.png", "noclamp smooth mips")
-matTable["W1"]["detail"] = Material("monkeyball/tex1_256x128_m_1f1b668f7d005e49_14.png", "noclamp smooth mips")
-matTable["W1"]["detail2"] = Material("monkeyball/13.png", "noclamp smooth mips")
-matTable["W1"]["detail3"] = Material("monkeyball/tex1_256x256_m_053618233250036d_14.png", "noclamp smooth mips")
-matTable["W1"]["trim"] = Material("monkeyball/tex1_256x64_m_ac3f639aec944ccb_14.png", "noclamp smooth mips")
+matTable["W1"]["check"] = Material("monkeyball/tex1_256x256_m_1f5fc1b864fb09a4_14.png", "noclamp smooth mips")
+matTable["W1"]["check2"] = Material("monkeyball/tex1_256x256_m_4d8e09666f490043_14.png", "noclamp smooth mips")
+matTable["W1"]["check3"] = Material("monkeyball/tex1_256x256_m_4d8e09666f490043_14.png", "noclamp smooth mips")
+matTable["W1"]["fill"] = Material("monkeyball/tex1_256x256_m_14dc2d9b3d102149_14.png", "noclamp smooth mips")
+matTable["W1"]["wood"] = Material("monkeyball/tex1_256x256_m_14dc2d9b3d102149_14.png", "noclamp smooth mips")
+matTable["W1"]["detail"] = Material("monkeyball/tex1_256x128_m_059147f31afd9c4e_14.png", "noclamp smooth mips")
+matTable["W1"]["detail2"] = Material("monkeyball/tex1_256x64_m_ab77fed98fc3bd77_14.png", "noclamp smooth mips")
+matTable["W1"]["detail3"] = Material("monkeyball/tex1_128x128_m_7b3fa64e7038b75e_14.png", "noclamp smooth mips")
+matTable["W1"]["trim"] = Material("monkeyball/tex1_256x64_m_ab77fed98fc3bd77_14.png", "noclamp smooth mips")
 
 function ENT:Initialize()
         self:DrawShadow( false )
@@ -59,6 +59,18 @@ function ENT:Initialize()
 
         //obj: https://share.rtm516.co.uk/lvl55.obj
         //mtl: https://share.rtm516.co.uk/lvl55.mtl
+        timer.Simple(3, function()
+            if self.children then
+                for i, v in ipairs(self.children) do
+                    v.basePos = v:GetPos()
+                    v.baseAngles = v:GetAngles()
+                    v.parentDiff = (v:GetPos() - self:GetPos())
+                    v.baseDir = v.parentDiff:GetNormalized()
+                    v.baseDist = v.parentDiff:Length()
+                    print("oh")
+                end
+            end
+        end)
 end
 
 -----------------------------------------------------------------------
@@ -156,8 +168,12 @@ function ENT:Think()
             self.currentItem = 1
             self.lastTime = 0
             self.nextFrameTime = CurTime() + self.animTable[1].time
+            self.baseAngle = self.animTable[self.currentItem].ang
         end
         if CurTime() > self.nextFrameTime then
+            if not self.animTable[self.currentItem] then
+                self.currentItem = 1
+            end
             self.lastPos = self.animTable[self.currentItem].pos
             self.lastAng = self.animTable[self.currentItem].ang
             self.lastTime = self.animTable[self.currentItem].time / 60
@@ -168,26 +184,85 @@ function ENT:Think()
             --print(self.animTable[self.currentItem].pos, self.animTable[self.currentItem].ang)
             --print(self:GetPhysicsObject():GetPos(), self:GetPhysicsObject():GetAngles())
             local time = ((self.animTable[self.currentItem].time / 60) - self.lastTime)
-            print("ah")
+            local physAng = Angle(self.animTable[self.currentItem].ang.p, self.animTable[self.currentItem].ang.y, self.animTable[self.currentItem].ang.r)
+            self:GetPhysicsObject():UpdateShadow(self.animTable[self.currentItem].pos, 
+                physAng, 
+                self.nextFrameTime - CurTime() )
+            if self.collisionObject then
+                self.collisionObject:GetPhysicsObject():UpdateShadow(self.animTable[self.currentItem].pos, 
+                physAng, 
+                self.nextFrameTime - CurTime() )
+            end
         end
         local lerp = 1 - (self.nextFrameTime - CurTime()) / ((self.animTable[self.currentItem].time / 60) - self.lastTime)
         local newPos = LerpVector(lerp,self.lastPos,self.animTable[self.currentItem].pos)
         local newAng = LerpAngle(lerp,self.lastAng,self.animTable[self.currentItem].ang)
-        self:GetPhysicsObject():UpdateShadow(newPos, newAng + Angle(0,0,90), FrameTime() )
         self:SetRealPos(newPos)
         self:SetRealAng(newAng)
+        if self.children then
+            for i, v in ipairs(self.children) do
+                local newChildDir = Vector(v.baseDir.x, v.baseDir.y,v.baseDir.z)
+                local newChildAng = v.baseDir:Angle()
+                local firstAng = (newAng - self.baseAngle)
+                local secondAng = Angle(v.baseAngles.p,v.baseAngles.y,v.baseAngles.r)
+                secondAng:RotateAroundAxis(firstAng:Right(), firstAng.p)
+                secondAng:RotateAroundAxis(firstAng:Up(), firstAng.y)
+                secondAng:RotateAroundAxis(firstAng:Forward(), firstAng.r)
+                local finalAng = secondAng
+                --finalAng:RotateAroundAxis(finalAng:Right(),90)
+                newChildDir:Rotate(newAng)
+                v:GetPhysicsObject():UpdateShadow(self:GetPos() + (newChildDir * v.baseDist), finalAng, FrameTime())
+            end
+        end
+        --self.collisionObject:SetPos(newPos)
+        --self.collisionObject:SetAngles(physAng)
     end
     self:NextThink(CurTime())
 
     if self.Mesh.Phys then return true end
     if self.Mesh.CRC && meshCache[self.Mesh.CRC] then
         if SERVER then
-            self:PhysicsFromMesh(meshCache[self.Mesh.CRC].all)
-		    self:GetPhysicsObject():EnableCollisions( true );
-		    self:GetPhysicsObject():EnableMotion( false );
-		    self:EnableCustomCollisions(true)
+            if not self.collider then
+                self:PhysicsFromMesh(meshCache[self.Mesh.CRC].all)
+                self:GetPhysicsObject():EnableCollisions( true )
+                self:GetPhysicsObject():EnableMotion( false )
+                self:EnableCustomCollisions(true)
+            else
+                self.collisionObject = ents.Create("prop_physics")
+                print(self.collider)
+                self.collisionObject:SetModel(self.collider)
+                self.collisionObject:Spawn()
+                self.collisionObject:PhysicsInitShadow(false, false)
+                local tempPhys = self.collisionObject:GetPhysicsObject()
+                local myPhys = tempPhys:GetMeshConvexes()
+                for i, v in ipairs(myPhys) do
+                    for n, p in ipairs(v) do
+                        myPhys[i][n] = Vector(p.pos)
+                    end
+                end
+                self.collisionObject:SetCustomCollisionCheck(true)
+                self.collisionObject:SetNoDraw(true)
+                self:PhysicsInitMultiConvex(myPhys)
+                self:GetPhysicsObject():EnableCollisions( false )
+                self:GetPhysicsObject():EnableMotion( false )
+                self:EnableCustomCollisions(false)
+                timer.Simple(3, function()
+                   for i, v in ipairs(ents.GetAll()) do
+                       if v:GetClass() ~= "ball" and v:GetClass() ~= "logic_collision_pair" then
+                           constraint.NoCollide( self.collisionObject, v, 0, 0 )
+                           print("nocollide")
+                       end
+                   end
+                end)
+            end
         end
         self.Mesh.Phys = true
+    end
+end
+
+function ENT:OnRemove()
+    if self.collisionObject then
+        self.collisionObject:Remove()
     end
 end
 
@@ -241,16 +316,16 @@ function ENT:Draw()
 end
 
 
-hook.Remove( "HUDPaint", "meshtools.LoadOverlay" )
-hook.Add( "HUDPaint", "meshtools.LoadOverlay", function()
-    local bc = Color( 175, 175, 175, 135 )
-    local tc = Color( 225, 225, 225, 255 )
-
-    for _, ent in pairs( ents.FindByClass( "sent_meshtools" ) ) do
-        if not ent.Mesh then continue end
-        if ent.Mesh.Loaded then continue end
-
-        local scr = ( ent:GetPos() + Vector( 0, 0, 20 ) ):ToScreen()
-        draw.WordBox( 6, scr.x, scr.y, "Loading...", "DermaDefault", bc, tc )
-    end
-end )
+--hook.Remove( "HUDPaint", "meshtools.LoadOverlay" )
+--hook.Add( "HUDPaint", "meshtools.LoadOverlay", function()
+--    local bc = Color( 175, 175, 175, 135 )
+--    local tc = Color( 225, 225, 225, 255 )
+--
+--    for _, ent in pairs( ents.FindByClass( "sent_meshtools" ) ) do
+--        if not ent.Mesh then continue end
+--        if ent.Mesh.Loaded then continue end
+--
+--        local scr = ( ent:GetPos() + Vector( 0, 0, 20 ) ):ToScreen()
+--        draw.WordBox( 6, scr.x, scr.y, "Loading...", "DermaDefault", bc, tc )
+--    end
+--end )

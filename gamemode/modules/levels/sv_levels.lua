@@ -1,6 +1,12 @@
 util.AddNetworkString("ClientBallSpawned")
 
 function LoadLevel(tablename)
+	for i, v in ipairs(ents.FindByClass("logic_collision_pair")) do
+		v:Remove()
+	end
+	for i, v in ipairs(ents.FindByClass("phys_constraintsystem")) do
+		v:Remove()
+	end
 	DestroyLevel()
 	curInstancedPropTable = {}
 	RunString(file.Read("proptables/" .. tablename .. ".txt","DATA"))
@@ -10,8 +16,7 @@ function LoadLevel(tablename)
 	for k, v in pairs(propTable.objects) do
 		if type(v) == "string" and string.Left(v,4) == "http" then
 			local newMesh = ents.Create("sent_meshtools")
-			newMesh:Spawn()
-			newMesh:LoadObjFromURL(v, true)
+			newMesh.num = k
 			table.insert(curInstancedPropTable, newMesh)
 			if propTable.animations and propTable.animations[k] then
 				tempTable1 = util.JSONToTable(file.Read("proptables/animations/" .. propTable.animations[k] .. ".json","DATA"))
@@ -32,6 +37,11 @@ function LoadLevel(tablename)
 				table.sort(tempTable2,function(a, b) return a.time < b.time end)
 				newMesh.animTable = tempTable2
 			end
+			if propTable.colliders and propTable.colliders[k] then
+				newMesh.collider = "models/monkeyball/colliders/" .. propTable.colliders[k] .. ".mdl"
+			end
+			newMesh:Spawn()
+			newMesh:LoadObjFromURL(v, true)
 		end
 	end
 	for i, v in ipairs(propTable.goals) do
@@ -53,7 +63,31 @@ function LoadLevel(tablename)
 		newGoalTrigger:SetCollisionGroup(COLLISION_GROUP_NONE)
 		newGoalTrigger:SetNoDraw(true)
 		newGoalTrigger.goalTrigger = true
-		table.insert(curInstancedPropTable, newGoalTrigger)
+		newGoalTrigger.goalParent = newGoal
+		table.insert(curInstancedPropTable, newGoalTrigger) 
+        timer.Simple(3, function()
+           for i, v in ipairs(ents.GetAll()) do
+               if v:GetClass() ~= "ball" and v:GetClass() ~= "logic_collision_pair" then
+                   constraint.NoCollide( newGoal, v, 0, 0 )
+                   constraint.NoCollide( newGoalTrigger, v, 0, 0 )
+                   print("nocollide")
+               end
+           end
+        end)
+		if v.parent then
+			for n, m in ipairs(ents.FindByClass("sent_meshtools")) do
+				if m.num == v.parent then
+					if not m.children then
+						m.children = {}
+					end
+					table.insert(m.children, newGoal)
+					table.insert(m.children, newGoalTrigger)
+					print("parenting")
+					print(newGoal)
+					print(m)
+				end
+			end
+		end
 	end
 end
 

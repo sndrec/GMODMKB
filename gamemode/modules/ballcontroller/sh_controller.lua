@@ -24,6 +24,7 @@ function GM:FinishMove( pl, move )
 				modifier = (modifier - 0.2) * 1.25
 				--print(modifier)
 				pl.ballEnt.moveData = baseMove * modifier
+				move:SetAngles(pl.ballEnt.ballViewAng)
 			else
 				pl.ballEnt.moveData = Vector(0,0,0)
 			end

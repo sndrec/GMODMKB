@@ -38,12 +38,12 @@ surface.CreateFont( "DermaHuger", {
 
 function ENT:Initialize()
 	self:SetRenderBounds(Vector(-1024,-1024,-1024), Vector(1024,1024,1024), Vector(2048, 2048, 2048))
-	self.UIRenderAngle = self:GetAngles()
-	self.UIRenderAngle:RotateAroundAxis(self:GetAngles():Forward(),90)
-	self.UIRenderAngle:RotateAroundAxis(self:GetAngles():Up(),180)
 end
 
 function ENT:Draw()
+	self.UIRenderAngle = self:GetAngles()
+	self.UIRenderAngle:RotateAroundAxis(self:GetAngles():Forward(),90)
+	self.UIRenderAngle:RotateAroundAxis(self:GetAngles():Up(),180)
 	local time = string.FormattedTime( GetGlobalFloat( "worldtimer", 0 ) - CurTime(), "%00i:%02i:%02i" )
 	self:DrawModel()
 	cam.Start3D2D(self:GetPos() + (self:GetAngles():Up() * 26) + (self:GetAngles():Right() * -1),self.UIRenderAngle,0.25)

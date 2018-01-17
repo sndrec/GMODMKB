@@ -15,6 +15,7 @@ roundInfo.curLevel = startLevel
 roundInfo.curState = STATE_WAITINGFORPLAYERS
 roundInfo.curTimer = CurTime() + roundTimers[roundInfo.curState]
 roundInfo.curStageTime = 0
+roundInfo.stageCount = 0
 roundInfo.fallOutZ = -2000
 
 SetGlobalVector("SpinCamOrigin",Vector(0,0,0))
@@ -70,13 +71,19 @@ function GM:Tick()
 				for i, v in ipairs(pls) do
 					v:ChatPrint("World complete!")
 				end
+				roundInfo.stageCount = 0
 				roundInfo.curTimer = CurTime() + 5
 				roundInfo.curState = STATE_GAMEOVER
 			end
 		elseif roundInfo.curState == STATE_ROUNDSTARTING then
+			roundInfo.stageCount = roundInfo.stageCount + 1
 			-- HERE IS WHERE THE ROUND BEGINS --
+			CreateClientText(nil, "Floor " .. roundInfo.stageCount, 4, "DermaScaleLarge", 0.5, 0.25, Color(255,255,255,255))
+			if propTable.stageName then
+				CreateClientText(nil, propTable.stageName, 4, "DermaScaleMed", 0.5, 0.75, Color(255,255,255,255))
+			end
 			roundInfo.curState = STATE_ROUNDACTIVE
-			roundInfo.curTimer = CurTime() + newLevelTimer + 3
+			roundInfo.curTimer = CurTime() + newLevelTimer + 3 + 100000
 			roundInfo.curStageTime = newLevelTimer
 			allCompleteTimer = 0
 			lastStartTime = CurTime()
@@ -112,7 +119,7 @@ function GM:Tick()
 			SetGlobalVector("SpinCamOrigin",origin + Vector(0,0,-bounds.z * 0.5))
 			SetGlobalVector("BallSpawnPos", CurSpawnPos)
 			SetGlobalFloat("SpinCamDist", dist)
-			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z) + 200)
+			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z * 1.25) + 200)
 			timer.Simple(3.4, function()
 				for i, v in ipairs(pls) do
 					v.nextSpawn = nil
