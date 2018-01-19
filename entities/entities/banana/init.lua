@@ -4,22 +4,23 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 
 function ENT:Initialize()
-	self:SetModel("models/food/burger.mdl")
+	self:SetModel("models/props_junk/watermelon01.mdl")
 	self:PhysicsInit(MOVETYPE_NONE)
 	self:SetSolid(MOVETYPE_NONE)
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetModelScale(4, 0)
+	self:SetTrigger(true)
+	self:UseTriggerBounds( true, 0 )
+end
+
+function ENT:Touch(ent)
+	if ent:GetClass() == "ball" then
+		print("hey")
+		self:EmitSound("monkeyball/fx_banana.wav",80,100,0.5)
+		self:GetOwner():AddMKBScore(1)
+		self:Remove()
+	end
 end
 
 function ENT:Think()
-	for i, v in ipairs(player.GetAll()) do
-		if v.ballEnt:IsValid() then
-			if self:GetPos():Distance(v.ballEnt:GetPos()) <= 72 then
-				self:Remove()
-				-- banana collection code here pls
-			end
-		end
-	end
-	self:NextThink( CurTime() )
-	return true
 end

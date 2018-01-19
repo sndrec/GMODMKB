@@ -5,6 +5,17 @@ function hidehud(name)
 end
 hook.Add("HUDShouldDraw", "HUDShouldDrawHide", hidehud)
 
+local colors = {}
+colors.black = Color(0, 0, 0, 255)
+colors.blue = Color(0, 0, 255, 255)
+colors.brightred = Color(200, 30, 30, 255)
+colors.darkred = Color(0, 0, 70, 100)
+colors.darkblack = Color(0, 0, 0, 200)
+colors.gray1 = Color(0, 0, 0, 155)
+colors.gray2 = Color(51, 58, 51,100)
+colors.red = Color(255, 0, 0, 255)
+colors.white = Color(255, 255, 255, 255)
+colors.white1 = Color(255, 255, 255, 200)
 
 surface.CreateFont( "DermaScaleSmall", {
 	font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
@@ -71,18 +82,31 @@ function draw.Heart(x, y, scale)
 	surface.DrawPoly(heart)
 end
 
+local curScore = 0
+
 function GM:HUDPaint()
-	local colors = {}
-	colors.black = Color(0, 0, 0, 255)
-	colors.blue = Color(0, 0, 255, 255)
-	colors.brightred = Color(200, 30, 30, 255)
-	colors.darkred = Color(0, 0, 70, 100)
-	colors.darkblack = Color(0, 0, 0, 200)
-	colors.gray1 = Color(0, 0, 0, 155)
-	colors.gray2 = Color(51, 58, 51,100)
-	colors.red = Color(255, 0, 0, 255)
-	colors.white = Color(255, 255, 255, 255)
-	colors.white1 = Color(255, 255, 255, 200)
+
+	for i, v in ipairs(player.GetAll()) do
+		if v:Alive() and v:GetObserverMode() == OBS_MODE_NONE then
+			render.SetLightingMode( 0 )
+			if v ~= LocalPlayer() then
+				local posTable = (v:GetPos() + Vector(0,0,30)):ToScreen()
+				draw.SimpleTextOutlined(v:Nick(),"DermaLarge",posTable.x,posTable.y - 30,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,1,Color(0,0,0))	
+			end
+			if v.clientBall and v.clientBall:IsValid() then
+				local crtWidth = ScrH() * 1.333
+				local multiplier = 0.6
+				local ratio = (((ScrW() / crtWidth) - 1) * multiplier) + 1
+			cam.Start3D(EyePos(),EyeAngles(),ratio * 80)
+			render.SetLightingMode( 1 )
+				render.SetColorMaterial()
+				render.DrawSphere(v.clientBall:GetPos(),26,32,32,Color(255,255,255,30))
+				render.DrawSphere(v.clientBall:GetPos(),28,32,32,Color(255,255,255,30))
+			cam.End3D()
+			end
+		end
+	end
+	render.SetLightingMode( 0 )
 
 	local LookEnt = LocalPlayer():GetEyeTrace().Entity
 	if LookEnt:IsPlayer() then
@@ -98,10 +122,18 @@ function GM:HUDPaint()
 		return true
 	end
 	if ClientBall ~= nil and ClientBall:IsValid() then
-		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaLarge",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaScaleSmall",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
 	end
 	local time = string.FormattedTime( GetGlobalFloat( "worldtimer", 0 ) - CurTime(), "%02i:%02i:%02i" )
-	draw.SimpleTextOutlined(time,"DermaLarge",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	draw.SimpleTextOutlined(time,"DermaScaleMed",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	curScore = Lerp(((math.abs(LocalPlayer():GetMKBScore() - curScore)) + 35) * FrameTime() * 0.3,curScore,LocalPlayer():GetMKBScore())
+	draw.SimpleTextOutlined("Score: " .. math.Round(curScore, 0),"DermaScaleMed",ScrW()*0.05, ScrH()*0.9,Color(255,255,255),TEXT_ALIGN_LEFT,TEXT_ALIGN_LEFT,2,Color(0,0,0))
+
+	local size = ScrW() * 0.08
+	local xPos = ScrW() * 0.25
+	draw.RoundedBox(12, xPos - (size * 0.5), -12, size, size, Color(0, 0, 0, 100))
+	draw.SimpleText("F3", "DermaLarge", xPos, size * 0.4, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	draw.SimpleText("Leaderboards", "DermaDefault", xPos, (size * 0.4) + 25, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 end
 
 function GM:InitPostEntity()

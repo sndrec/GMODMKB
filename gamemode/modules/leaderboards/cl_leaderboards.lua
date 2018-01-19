@@ -13,6 +13,7 @@ function OpenLeaderBoardMenu()
 	scrollMenu:SetPos(5, 25)
 	scrollMenu:SetSize(ScrW() * 0.165,ScrH() * 0.45)
 
+
 	function leaderBoardMenu:Think()
 		if not self.tableInstanced then
 			if #stageListTable >= 1 then
@@ -42,22 +43,26 @@ net.Receive("RequestSpecificStage", function()
 		v:Remove()
 	end
 	currentDisplayedLeaderboard = {}
+	local scrollMenu2 = vgui.Create( "DScrollPanel", leaderBoardMenu )
+	scrollMenu2:SetPos((ScrW() * 0.165) + 20, 25)
+	scrollMenu2:SetSize(ScrW() * 0.5,ScrH() * 0.45)
+		table.insert(currentDisplayedLeaderboard, scrollMenu2)
 	for i, v in ipairs(tempTable) do
 		PrintTable(v)
-		local text1 = vgui.Create("DLabel", leaderBoardMenu)
-		local text2 = vgui.Create("DLabel", leaderBoardMenu)
-		local text3 = vgui.Create("DLabel", leaderBoardMenu)
-		local avatar = vgui.Create( "AvatarImage", leaderBoardMenu )
+		local text1 = vgui.Create("DLabel", scrollMenu2)
+		local text2 = vgui.Create("DLabel", scrollMenu2)
+		local text3 = vgui.Create("DLabel", scrollMenu2)
+		local avatar = vgui.Create( "AvatarImage", scrollMenu2 )
 		local height = ScrH() * 0.06
 		avatar:SetSize( height, height )
-		local curVerticalHeight = ((i - 1) * (height + 2)) + 25
-		local horizPos = ScrW() * 0.25
+		local curVerticalHeight = ((i - 1) * (height + 2)) + (ScrW() * 0.015)
+		local horizPos = ScrW() * 0.1
 		text1:SetText(v.nick)
 		text2:SetText(v.clearTime .. "s")
 		text3:SetText("#" .. i)
 		text1:SetPos(horizPos + height + 4, curVerticalHeight)
 		text2:SetPos(horizPos + height + 4, curVerticalHeight + (height * 0.5))
-		text3:SetPos(ScrW() * 0.21, curVerticalHeight)
+		text3:SetPos(ScrW() * 0.01, curVerticalHeight)
 		text1:SetFont("DermaScaleSmall")
 		text2:SetFont("DermaScaleSmall")
 		text3:SetFont("DermaScaleMed")
@@ -70,9 +75,6 @@ net.Receive("RequestSpecificStage", function()
 		table.insert(currentDisplayedLeaderboard, text2)
 		table.insert(currentDisplayedLeaderboard, text3)
 		table.insert(currentDisplayedLeaderboard, avatar)
-		if i > 10 then
-			break
-		end
 	end
 end)
 

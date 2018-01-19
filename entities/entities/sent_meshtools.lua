@@ -296,8 +296,7 @@ end
 
 function ENT:Draw()
     if not self:ShouldDraw() then return end
-
-    self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
+    --self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
     self.Mesh.Matrix:SetTranslation( self:GetRealPos() )
     self.Mesh.Matrix:SetAngles( self:GetRealAng() + Angle(0,0,90) )
     

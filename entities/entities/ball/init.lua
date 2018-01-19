@@ -36,7 +36,7 @@ function ENT:Initialize( )
 	self:GetOwner():SetModelScale(0.65,0)
 	self:SetMaterial("models/props_lab/tank_glass002.vtf")
 	self:SetColor(Color(200,255,255,255))
-	self:SetRenderMode(RENDERMODE_TRANSALPHA)
+	self:SetRenderMode(RENDERMODE_NORMAL)
 	self:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
     self:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
     self:SetFriction(0.00001)
@@ -129,7 +129,7 @@ function ENT:Think()
 		self:Remove()
 	end
 	self:CalcBallViewAng()
-	if self.victory then
+	if self.victory == true then
 		if CurTime() < self.victoryTime + 1.75 then
 			self.physObj:SetVelocity(self.physObj:GetVelocity() - (self.physObj:GetVelocity() * engine.TickInterval() * 3))
 		else
@@ -227,14 +227,20 @@ function ENT:Think()
 		})
 	end
 	if goalTrace and goalTrace.Hit and goalTrace.Entity.goalTrigger then
+		local clearTime = math.Round(CurTime() - self.spawnTime, 2) - 0.60
+		local timeFromRoundStart = math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1
+		local percentage = 0.5 + ((1 - (timeFromRoundStart / roundInfo.curStageTime)) * 0.5)
+		print(percentage)
+		pl:AddMKBScore(150 * goalTrace.Entity.goalType * percentage)
 		pl:ChatPrint("You beat the level.")
 		local goal = goalTrace.Entity
 		goal:EmitSound("monkeyball/fx_goaltape.wav",90,math.random(95,105), 1)
 		for i, v in ipairs(player.GetAll()) do
 			v:ChatPrint(pl:Nick() .. " beat the stage in " .. math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1 .. " seconds.")
 		end
-		pl:ChatPrint("Your completion time from spawn was " .. math.Round(CurTime() - self.spawnTime, 2) - 0.60 .. " seconds.")
-		WriteLeaderboardEntry(pl, roundInfo.curLevel, math.Round(CurTime() - self.spawnTime, 2) - 0.60)
+		CreateClientText(pl, "GOAL!", 4, "DermaScaleLarge", 0.5, 0.25, Color(150,255,150,255))
+		CreateClientText(pl, clearTime .. " seconds", 4, "DermaScaleMed", 0.5, 0.35, Color(255,255,255,255))
+		WriteLeaderboardEntry(pl, roundInfo.curLevel, clearTime)
 		pl.victory = true
 		self.victory = true
 		self.victoryTime = CurTime()
@@ -255,9 +261,21 @@ function ENT:Think()
 	end
 
 	self.oldPos = self:GetPos()
-	if self:GetPos().z < roundInfo.fallOutZ then
-		self:Remove()
-		pl.nextSpawn = CurTime() + 1
+	if self:GetPos().z < roundInfo.fallOutZ and not self.fallout then
+		self.fallout = true
+		pl:AddMKBScore(-15)
+		net.Start("Victory")
+		net.WriteInt(2, 8)
+		net.Send(pl)
+		self:EmitSound("monkeyball/fx_fallout.wav",80,100, 0.4)
+		timer.Simple(1, function()
+			net.Start("Victory")
+			net.WriteInt(0, 8)
+			net.Send(pl)
+			self:Remove()
+			pl.nextSpawn = CurTime()
+			self.fallout = false
+		end)
 	end
 	self:NextThink( CurTime() )
 	return true

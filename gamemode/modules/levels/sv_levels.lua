@@ -64,6 +64,7 @@ function LoadLevel(tablename)
 		newGoalTrigger:SetNoDraw(true)
 		newGoalTrigger.goalTrigger = true
 		newGoalTrigger.goalParent = newGoal
+		newGoalTrigger.goalType = v.goalType
 		table.insert(curInstancedPropTable, newGoalTrigger) 
         timer.Simple(3, function()
            for i, v in ipairs(ents.GetAll()) do

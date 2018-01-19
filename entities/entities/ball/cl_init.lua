@@ -61,6 +61,15 @@ function ENT:Initialize()
 
 end
 
+
+function ENT:DrawTranslucent( flags )
+
+	self:DrawModel()
+
+end
+
+local ballMat = Material("models/props_lab/tank_glass002.vtf")
+
 function ENT:Draw()
 
 	local fakeVel = self:GetVelocity()
@@ -70,7 +79,8 @@ function ENT:Draw()
 	if self:GetModelScale() ~= 1.75 then
 		self:SetModelScale(1.75,0)
 	end
-	if self:GetOwner() == LocalPlayer() then
+	local pl = self:GetOwner()
+	if pl == LocalPlayer() then
 		local rotAngle = Angle(0,0,0)
 		local rotAx = _VIEWANGLES_CLONE
 		rotAx.p = 0
@@ -85,30 +95,23 @@ function ENT:Draw()
 		--surface.SetDrawColor(255,255,255,255)
 		--surface.DrawRect((self.SideMove * 2.56) + 256,(-self.ForwardMove * 2.56) + 256,8,8)
 		--cam.End2D()
-	else
-		cam.Start2D()
-		local posTable = (self:GetPos() + Vector(0,0,30)):ToScreen()
-		draw.SimpleTextOutlined(self:GetOwner():Nick(),"DermaLarge",posTable.x,posTable.y - 30,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,1,Color(0,0,0))
-		cam.End2D()
 	end
-	self:DrawModel()
-
-	if self:GetOwner().clientBall and self:GetOwner().clientBall == self and self:GetOwner().clientBall:IsValid() then
-		self:GetOwner():SetPos(self:GetPos() - Vector(0,0,23))
-		self:GetOwner():SetRenderOrigin(self:GetPos() - Vector(0,0,23))
-		if self:GetOwner() == LocalPlayer() then
+	if pl.clientBall and pl.clientBall == self and pl.clientBall:IsValid() then
+		pl:SetPos(self:GetPos() - Vector(0,0,23))
+		pl:SetRenderOrigin(self:GetPos() - Vector(0,0,23))
+		if pl == LocalPlayer() then
 			local newAng = Angle(0, ballViewAng.y, 0)
-			self:GetOwner():SetEyeAngles(newAng)
-			self:GetOwner():SetAngles(newAng)
-			self:GetOwner():SetRenderAngles(newAng)
+			pl:SetEyeAngles(newAng)
+			pl:SetAngles(newAng)
+			pl:SetRenderAngles(newAng)
 		else
 			local velAng = self:GetVelocity():Angle()
 			velAng.p = 0
-			self:GetOwner():SetEyeAngles(velAng)
-			self:GetOwner():SetAngles(velAng)
-			self:GetOwner():SetRenderAngles(velAng)
+			pl:SetEyeAngles(velAng)
+			pl:SetAngles(velAng)
+			pl:SetRenderAngles(velAng)
 		end
-		self:GetOwner():DrawModel()
+		pl:DrawModel()
 	end
 
 end
@@ -192,7 +195,13 @@ local function MyCalcView( pl, pos, angles, fov )
 		view.fov = 80
 		view.drawviewer = false
 		return view
-	elseif ClientBall == nil or not ClientBall:IsValid() then return end
+	elseif ClientBall == nil or not ClientBall:IsValid() then 
+		view.origin = pos
+		view.angles = angles
+		view.fov = 80
+		view.drawviewer = false
+		return view
+	end
 	local ballVel = ClientBall:GetVelocity()
 
 	rotOffset = Angle(rotOffset.p / ((10 * FrameTime()) + 1),rotOffset.y / ((16 * FrameTime()) + 1),rotOffset.r / ((16 * FrameTime()) + 1))
@@ -261,6 +270,7 @@ local function MyCalcView( pl, pos, angles, fov )
 	_VIEWORIGIN = view.origin
 	_VIEWANGLES = ballViewAng + Angle(15,0,0)
 	_VIEWANGLES_CLONE = ballViewAng + Angle(15,0,0)
+	_VIEWANGLES_CLONE_2 = Angle(0,ballViewAng.y,ballViewAng.r) + Angle(ClientBall.rotAngle.p,0,ClientBall.rotAngle.r)
 	_ROTOFFSET = rotOffset
 
 	return view

@@ -11,11 +11,14 @@ function WriteLeaderboardEntry(pl, stage, time)
 		newTable = util.JSONToTable(file.Read(filename,"DATA"))
 	end
 
+	local dontWrite = false
+	
 	for i = #newTable, 1, -1 do
 		if newTable[i].steamID == ID then
 			if newTable[i].clearTime < time then
 				return
 			else
+				CreateClientText(pl, "New personal best!", 6, "DermaScaleSmall", 0.5, 0.8, Color(255,255,255,255))
 				table.remove(newTable, i)
 			end
 		end
@@ -29,10 +32,19 @@ function WriteLeaderboardEntry(pl, stage, time)
 	table.sort(newTable, function(a, b) return a.clearTime < b.clearTime end)
 
 	if newTable[1].steamID == ID then
-		for i, v in ipairs(player.GetAll()) do
-			v:ChatPrint(pl:Nick() .. " has set a new WR of " .. time .. " seconds!")
+		CreateClientText(nil, pl:Nick() .. " has set a new WR of " .. time .. " seconds!", 6, "DermaScaleSmall", 0.5, 0.9, Color(255,255,255,255))
+		CreateClientText(pl, "You got a World Record!!!", 6, "DermaScaleMed", 0.5, 0.7, Color(255,255,255,255))
+	else
+		local place = 0
+		for i, v in ipairs(newTable) do
+			if v.steamID == ID then
+				place = i
+				break
+			end
 		end
+		CreateClientText(pl, "Your time was #" .. place .. ".", 6, "DermaScaleSmall", 0.5, 0.7, Color(255,255,255,255))
 	end
+
 
 	local writeTable = util.TableToJSON(newTable,true)
 
@@ -53,7 +65,6 @@ function SendStageList(pl)
 		local start2, endpos2, str2 = string.find(v,".txt")
 		tempTable.stage = tonumber(string.sub(v, start + 2, start2 - 1))
 		table.insert(leaderboardTable, tempTable)
-		PrintTable(tempTable)
 	end
 
 	table.sort(leaderboardTable, function(a, b) return a.stage < b.stage end)
@@ -77,8 +88,65 @@ function SendStageLeaderboard(pl, world, floor)
 	net.Send(pl)
 end
 
+function RetrieveWR(stage)
+	local filename = "leaderboards/LB_" .. stage .. ".txt"
+	print(filename)
+	local newTable = {}
+	if not file.Exists(filename,"DATA") then
+		for i, v in ipairs(player.GetAll()) do
+			v:ChatPrint("No times for this stage yet.")
+		end
+	else
+		newTable = util.JSONToTable(file.Read(filename,"DATA"))
+	end
+
+	return newTable[1]
+
+end
+
+function RetrievePB(stage, pl)
+	local filename = "leaderboards/LB_" .. stage .. ".txt"
+	print(filename)
+	local newTable = {}
+	if file.Exists(filename,"DATA") then
+		newTable = util.JSONToTable(file.Read(filename,"DATA"))
+	end
+
+	local desiredEntry = nil
+
+	for i, v in ipairs(newTable) do
+		if v.steamID == pl:SteamID64() then
+			desiredEntry = v
+			break
+		end
+	end
+
+	if desiredEntry == nil then
+		desiredEntry = "N/A"
+	end
+
+	return desiredEntry
+end
+
+
+function SendStageLeaderboardSimple(pl, stage)
+	local filename = "leaderboards/LB_" .. stage .. ".txt"
+	print(filename)
+	local newTable = {}
+	if not file.Exists(filename,"DATA") then
+		pl:ChatPrint("No times for this stage yet.")
+	else
+		newTable = util.JSONToTable(file.Read(filename,"DATA"))
+	end
+
+	net.Start("RequestSpecificStage")
+	net.WriteTable(newTable)
+	net.Send(pl)
+end
+
 net.Receive("RequestStages", function(len, pl)
 	SendStageList(pl)
+	SendStageLeaderboardSimple(pl, roundInfo.curLevel)
 end)
 
 net.Receive("RequestSpecificStage", function(len, pl)

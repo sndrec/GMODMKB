@@ -51,6 +51,7 @@ end
 
 function GM:PlayerInitialSpawn(pl)
 	self:PlayerSpawnAsSpectator(pl)
+	pl:SetMKBScore(0)
 end
 
 function GM:PlayerDeathSound()

@@ -10,6 +10,8 @@ roundTimers[STATE_LEVELTRANSITION] = 1
 
 local startLevel = "MB_W1_L1"
 
+-- high poly stage for testing: MB_W1_L28
+
 roundInfo = {}
 roundInfo.curLevel = startLevel
 roundInfo.curState = STATE_WAITINGFORPLAYERS
@@ -38,6 +40,7 @@ function GM:Tick()
 				if v.ballEnt and v.ballEnt:IsValid() then
 					v.ballEnt:Remove()
 				end
+				v:SetMKBScore(0)
 				self:PlayerSpawnAsSpectator(v)
 			end
 		elseif roundInfo.curState == STATE_ROUNDACTIVE then
@@ -79,11 +82,25 @@ function GM:Tick()
 			roundInfo.stageCount = roundInfo.stageCount + 1
 			-- HERE IS WHERE THE ROUND BEGINS --
 			CreateClientText(nil, "Floor " .. roundInfo.stageCount, 4, "DermaScaleLarge", 0.5, 0.25, Color(255,255,255,255))
+			CreateClientText(nil, "WR:", 5, "DermaScaleMed", 0.15, 0.1, Color(255,255,255))
+			CreateClientText(nil, "___", 5, "DermaScaleMed", 0.15, 0.11, Color(255,255,255))
+			local WRTable = RetrieveWR(roundInfo.curLevel)
+			CreateClientText(nil, WRTable.clearTime .. "s by " .. WRTable.nick, 5, "DermaScaleSmall", 0.15, 0.165, Color(255,255,255))
+			for i, v in ipairs(pls) do
+				local PBTable = RetrievePB(roundInfo.curLevel, v)
+				CreateClientText(v, "Personal Best", 5, "DermaScaleMed", 0.8, 0.1, Color(255,255,255))
+				CreateClientText(v, "_____________", 5, "DermaScaleMed", 0.8, 0.11, Color(255,255,255))
+				if type(PBTable) == "table" then
+					CreateClientText(v, PBTable.clearTime .. "s", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
+				else
+					CreateClientText(v, "N/A", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
+				end
+			end
 			if propTable.stageName then
 				CreateClientText(nil, propTable.stageName, 4, "DermaScaleMed", 0.5, 0.75, Color(255,255,255,255))
 			end
 			roundInfo.curState = STATE_ROUNDACTIVE
-			roundInfo.curTimer = CurTime() + newLevelTimer + 3 + 100000
+			roundInfo.curTimer = CurTime() + newLevelTimer + 3
 			roundInfo.curStageTime = newLevelTimer
 			allCompleteTimer = 0
 			lastStartTime = CurTime()
@@ -117,7 +134,11 @@ function GM:Tick()
 			print(dist)
 			print("------------")
 			SetGlobalVector("SpinCamOrigin",origin + Vector(0,0,-bounds.z * 0.5))
-			SetGlobalVector("BallSpawnPos", CurSpawnPos)
+			local trace = util.TraceLine({
+				start = CurSpawnPos,
+				endpos = CurSpawnPos + Vector(0,0,-10000)
+			})
+			SetGlobalVector("BallSpawnPos", trace.HitPos)
 			SetGlobalFloat("SpinCamDist", dist)
 			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z * 1.25) + 200)
 			timer.Simple(3.4, function()

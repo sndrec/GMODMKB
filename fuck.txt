@@ -1,0 +1,1 @@
+/c/Program\ Files/Epic\ Games/UE_4.18/Engine/Binaries/DotNET/UnrealBuildTool.exe UnrealMKB Development Win64 -project="C:\Users\loser\Documents\Unreal Projects\UnrealMKB\UnrealMKB\UnrealMKB.uproject" -editorrecompile -progress -NoHotReloadFromIDE

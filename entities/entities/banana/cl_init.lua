@@ -1,9 +1,9 @@
 include("shared.lua")
 
 function ENT:Initialize()
-	self.model = ClientsideModel("models/food/burger.mdl")
+	self.model = ClientsideModel("models/props_junk/watermelon01.mdl")
 	self.model:SetNoDraw(true)
-	self.model:SetModelScale(4, 0)
+	self.model:SetModelScale(1, 0)
 end
 
 function ENT:Draw()
@@ -13,8 +13,7 @@ function ENT:Draw()
     local newPos = ang:Up() * (math.sin(CurTime() * 3) * 8)
     self.model:SetPos(pos + newPos)
 
-    ang:RotateAroundAxis(ang:Up(), (CurTime() * 180) % 360)
-    self.model:SetAngles(ang)
+    self.model:SetAngles(Angle(0,(CurTime() * 180) % 360,0))
 
 	self.model:DrawModel()
 end

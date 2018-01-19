@@ -46,3 +46,7 @@ end
 function GM:PlayerFootstep( pl, pos, foot, soundChoice, volume, filter )
 	return true
 end
+
+function GM:PlayerNoClip( pl, state )
+	return false
+end
