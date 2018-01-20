@@ -11,3 +11,11 @@ end
 function PLAYER:AddMKBScore(score)
 	self:SetMKBScore(self:GetMKBScore() + score)
 end
+
+function PLAYER:GetMouseJoy()
+	return self:GetDTVector(2)
+end
+
+function PLAYER:SetMouseJoy(vec)
+	self:SetDTVector(2, vec)
+end

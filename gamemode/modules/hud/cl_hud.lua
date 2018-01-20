@@ -83,6 +83,7 @@ function draw.Heart(x, y, scale)
 end
 
 local curScore = 0
+local whiteMat = Material("vgui/white.vmt")
 
 function GM:HUDPaint()
 
@@ -126,6 +127,28 @@ function GM:HUDPaint()
 	draw.RoundedBox(12, xPos - (size * 0.5), -12, size, size, Color(0, 0, 0, 100))
 	draw.SimpleText("F3", "DermaLarge", xPos, size * 0.4, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	draw.SimpleText("Leaderboards", "DermaDefault", xPos, (size * 0.4) + 25, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+
+
+	local mouseJoyEnable = GetConVar( "mb_mousejoy" ):GetBool()
+	if mouseJoyEnable then
+		print("eyy")
+		local mj = LocalPlayer():GetMouseJoy()
+		cam.Start2D()
+		render.SetColorMaterial()
+		surface.SetDrawColor(0,0,0,100)
+		surface.SetMaterial(whiteMat)
+		local size = ScrH() * 0.15
+		local visX = ScrW() - (size * 1.5)
+		local visY = ScrH() - (size * 1.5)
+		draw.Circle( visX, visY, size, size, 32 )
+		surface.SetDrawColor(255,255,255,200)
+		local x = mj.x * 0.00390625
+		local y = mj.y * 0.00390625
+		draw.Circle( visX + (x * size),  visY + (y * size), size * 0.04, size * 0.04, 8 )
+		surface.SetDrawColor(255,80,80,200)
+		draw.Circle( visX, visY, size * 0.05, size * 0.05, 12 )
+		cam.End2D()
+	end
 end
 
 function GM:InitPostEntity()
