@@ -44,6 +44,14 @@ function LoadLevel(tablename)
 			newMesh:LoadObjFromURL(v, true)
 		end
 	end
+	if propTable.gameObjects then
+		for i, v in ipairs(propTable.gameObjects) do
+			local ent = ents.Create(v.class)
+			ent:SetPos(v.pos)
+			ent:Spawn()
+			table.insert(curInstancedPropTable, ent)
+		end
+	end
 	for i, v in ipairs(propTable.goals) do
 		local newGoal = ents.Create("levelblock")
 		newGoal:SetPos(v.pos)

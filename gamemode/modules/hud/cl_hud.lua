@@ -108,21 +108,13 @@ function GM:HUDPaint()
 	end
 	render.SetLightingMode( 0 )
 
-	local LookEnt = LocalPlayer():GetEyeTrace().Entity
-	if LookEnt:IsPlayer() then
-		local pos = LookEnt:EyePos()
-
-		pos.z = pos.z + 10
-		pos = pos:ToScreen()
-	
-		local nick, plyTeam = LookEnt:Nick(), LookEnt:Team()
-		draw.DrawText(nick, "Trebuchet24", pos.x + 1, pos.y + 1, colors.black, 1)
-		draw.DrawText(nick, "Trebuchet24", pos.x, pos.y, team.GetColor(plyTeam) , 1)
-
-		return true
-	end
 	if ClientBall ~= nil and ClientBall:IsValid() then
 		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaScaleSmall",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	else
+		surface.SetDrawColor(0,0,0,255)
+		surface.DrawRect((ScrW() * 0.5) - 2, (ScrH() * 0.5) - 2, 5, 5)
+		surface.SetDrawColor(255,255,255,255)
+		surface.DrawRect((ScrW() * 0.5) - 1, (ScrH() * 0.5) - 1, 3, 3)
 	end
 	local time = string.FormattedTime( GetGlobalFloat( "worldtimer", 0 ) - CurTime(), "%02i:%02i:%02i" )
 	draw.SimpleTextOutlined(time,"DermaScaleMed",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))

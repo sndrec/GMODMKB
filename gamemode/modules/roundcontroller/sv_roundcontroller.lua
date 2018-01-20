@@ -188,3 +188,9 @@ function GM:Tick()
 		end
 	end
 end
+
+concommand.Add("mb_skiplevel",function(pl, command, args)
+	if pl:IsAdmin() then
+		roundInfo.curTimer = CurTime() + 0.1
+	end
+end)

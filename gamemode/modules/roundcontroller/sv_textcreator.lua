@@ -21,3 +21,20 @@ function CreateTip(pl, text)
 	net.WriteString(text)
 	net.Send(pl)
 end
+
+function hex2rgb(hex)
+    hex = hex:gsub("#","")
+    return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))
+end
+
+concommand.Add("createscreentext",
+	function(pl, cmd, args)
+		CreateClientText(nil, 
+			args[1], 
+			tonumber(args[2]), 
+			"DermaLarge", 
+			tonumber(args[3]), 
+			tonumber(args[4]), 
+			Color(tonumber(args[5]), tonumber(args[6]), tonumber(args[7])))
+
+	end)

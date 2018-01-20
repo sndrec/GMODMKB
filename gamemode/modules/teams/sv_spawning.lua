@@ -58,28 +58,32 @@ function GM:PlayerDeathSound()
 	return true
 end
 
-concommand.Add("spawn_ball", function(pl)
-	for k,v in pairs(ents.FindByClass("ball")) do
-		if v:GetOwner() == pl then
-			v:Remove()
-		end
-	end
-	pl:SetTeam(TEAM_PLAYERS)
-	pl:KillSilent()
-	pl:Spawn()
-end)
+--concommand.Add("spawn_ball", function(pl)
+--	for k,v in pairs(ents.FindByClass("ball")) do
+--		if v:GetOwner() == pl then
+--			v:Remove()
+--		end
+--	end
+--	pl:SetTeam(TEAM_PLAYERS)
+--	pl:KillSilent()
+--	pl:Spawn()
+--end)
+--
+--concommand.Add("remove_ball", function(pl)
+--	for k,v in pairs(ents.FindByModel("models/XQM/Rails/gumball_1.mdl")) do
+--		v:Remove()
+--	end
+--end)
+--
+--concommand.Add("pos_ball", function(pl, cmd, args)
+--	if table.Count(args) == 3 then
+--		pl:GetObserverTarget():SetPos(Vector(args[1], args[2], args[3]))
+--	end
+--end)
 
-concommand.Add("remove_ball", function(pl)
-	for k,v in pairs(ents.FindByModel("models/XQM/Rails/gumball_1.mdl")) do
-		v:Remove()
-	end
-end)
-
-concommand.Add("pos_ball", function(pl, cmd, args)
-	if table.Count(args) == 3 then
-		pl:GetObserverTarget():SetPos(Vector(args[1], args[2], args[3]))
-	end
-end)
+function GM:CanPlayerSuicide( pl )
+	return false
+end
 
 hook.Add("ShouldCollide", "ShouldCollideBall", function(ent1, ent2)
 	if ((ent1:GetClass() == "ball") && (ent2:GetClass() == "ball")) then

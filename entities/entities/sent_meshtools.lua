@@ -268,7 +268,7 @@ end
 
 if not CLIENT then return end
 function ENT:ShouldDraw()
-    if not self.requestTimer then self.requestTimer = CurTime() + 2 end
+    if not self.requestTimer then self.requestTimer = CurTime() + 3 end
     if not self.Mesh then return false end
     if self.Mesh.Loaded then 
         return true 
