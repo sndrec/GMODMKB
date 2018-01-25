@@ -37,6 +37,7 @@ function ENT:Initialize()
         self:SetMoveType( MOVETYPE_NONE )
         self:SetSolid( SOLID_VPHYSICS )
         self:SetAngles(Angle(0, 0, 90))
+        self.spawnTime = CurTime()
 
         if CLIENT then
             self:SetRenderBounds(Vector(0, 0, 0), Vector(0, 0, 0), Vector(32768, 32768, 32768))
@@ -162,6 +163,7 @@ end)
 
 function ENT:Think()
     if SERVER and self.animTable and self.spawnTime then
+        print("ah")
         if not self.shadowInitialized then
             self:MakePhysicsObjectAShadow(false, false)
             self.shadowInitialized = true
@@ -185,9 +187,6 @@ function ENT:Think()
             --print(self:GetPhysicsObject():GetPos(), self:GetPhysicsObject():GetAngles())
             local time = ((self.animTable[self.currentItem].time / 60) - self.lastTime)
             local physAng = Angle(self.animTable[self.currentItem].ang.p, self.animTable[self.currentItem].ang.y, self.animTable[self.currentItem].ang.r)
-            self:GetPhysicsObject():UpdateShadow(self.animTable[self.currentItem].pos, 
-                physAng, 
-                self.nextFrameTime - CurTime() )
             if self.collisionObject then
                 self.collisionObject:GetPhysicsObject():UpdateShadow(self.animTable[self.currentItem].pos, 
                 physAng, 
@@ -234,23 +233,14 @@ function ENT:Think()
                 self.collisionObject:Spawn()
                 self.collisionObject:PhysicsInitShadow(false, false)
                 local tempPhys = self.collisionObject:GetPhysicsObject()
-                local myPhys = tempPhys:GetMeshConvexes()
-                for i, v in ipairs(myPhys) do
-                    for n, p in ipairs(v) do
-                        myPhys[i][n] = Vector(p.pos)
-                    end
-                end
                 self.collisionObject:SetCustomCollisionCheck(true)
                 self.collisionObject:SetNoDraw(true)
-                self:PhysicsInitMultiConvex(myPhys)
-                self:GetPhysicsObject():EnableCollisions( false )
-                self:GetPhysicsObject():EnableMotion( false )
+                self:PhysicsInitShadow(false, false)
                 self:EnableCustomCollisions(false)
                 timer.Simple(3, function()
                    for i, v in ipairs(ents.GetAll()) do
                        if v:GetClass() ~= "ball" and v:GetClass() ~= "logic_collision_pair" then
                            constraint.NoCollide( self.collisionObject, v, 0, 0 )
-                           print("nocollide")
                        end
                    end
                 end)

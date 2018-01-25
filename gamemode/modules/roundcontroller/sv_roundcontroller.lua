@@ -85,22 +85,24 @@ function GM:Tick()
 			CreateClientText(nil, "WR:", 5, "DermaScaleMed", 0.15, 0.1, Color(255,255,255))
 			CreateClientText(nil, "___", 5, "DermaScaleMed", 0.15, 0.11, Color(255,255,255))
 			local WRTable = RetrieveWR(roundInfo.curLevel)
-			CreateClientText(nil, WRTable.clearTime .. "s by " .. WRTable.nick, 5, "DermaScaleSmall", 0.15, 0.165, Color(255,255,255))
-			for i, v in ipairs(pls) do
-				local PBTable = RetrievePB(roundInfo.curLevel, v)
-				CreateClientText(v, "Personal Best", 5, "DermaScaleMed", 0.8, 0.1, Color(255,255,255))
-				CreateClientText(v, "_____________", 5, "DermaScaleMed", 0.8, 0.11, Color(255,255,255))
-				if type(PBTable) == "table" then
-					CreateClientText(v, PBTable.clearTime .. "s", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
-				else
-					CreateClientText(v, "N/A", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
+			if WRTable then
+				CreateClientText(nil, WRTable.clearTime .. "s by " .. WRTable.nick, 5, "DermaScaleSmall", 0.15, 0.165, Color(255,255,255))
+				for i, v in ipairs(pls) do
+					local PBTable = RetrievePB(roundInfo.curLevel, v)
+					CreateClientText(v, "Personal Best", 5, "DermaScaleMed", 0.8, 0.1, Color(255,255,255))
+					CreateClientText(v, "_____________", 5, "DermaScaleMed", 0.8, 0.11, Color(255,255,255))
+					if type(PBTable) == "table" then
+						CreateClientText(v, PBTable.clearTime .. "s", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
+					else
+						CreateClientText(v, "N/A", 5, "DermaScaleSmall", 0.8, 0.165, Color(255,255,255))
+					end
 				end
 			end
 			if propTable.stageName then
 				CreateClientText(nil, propTable.stageName, 4, "DermaScaleMed", 0.5, 0.75, Color(255,255,255,255))
 			end
 			roundInfo.curState = STATE_ROUNDACTIVE
-			roundInfo.curTimer = CurTime() + newLevelTimer + 3
+			roundInfo.curTimer = CurTime() + newLevelTimer + LEVELSPINTIME + 0.6
 			roundInfo.curStageTime = newLevelTimer
 			allCompleteTimer = 0
 			lastStartTime = CurTime()
@@ -109,26 +111,24 @@ function GM:Tick()
 			local bounds = nil
 			local origin = nil
 			local dist = nil
-			for i, v in ipairs(stagePieces) do
-				v.spawnTime = CurTime()
-				local mins, maxs = v:GetCollisionBounds()
-				local tempx = mins.x
-				local tempy = mins.y
-				local tempz = mins.z
-				mins.x = tempx
-				mins.y = -tempz
-				mins.z = tempy
-				tempx = maxs.x
-				tempy = maxs.y
-				tempz = maxs.z
-				maxs.x = tempx
-				maxs.y = -tempz
-				maxs.z = tempy
-				origin = (mins + maxs) * 0.5
-				bounds = origin + maxs
-				dist = origin:Distance(maxs) * 2
-				print(mins, maxs)
-			end
+			stagePieces[1].spawnTime = CurTime()
+			local mins, maxs = stagePieces[1]:GetCollisionBounds()
+			local tempx = mins.x
+			local tempy = mins.y
+			local tempz = mins.z
+			mins.x = tempx
+			mins.y = -tempz
+			mins.z = tempy
+			tempx = maxs.x
+			tempy = maxs.y
+			tempz = maxs.z
+			maxs.x = tempx
+			maxs.y = -tempz
+			maxs.z = tempy
+			origin = (mins + maxs) * 0.5
+			bounds = origin + maxs
+			dist = origin:Distance(maxs) * 2
+			print(mins, maxs)
 			print("Starting Cam Info\n-------------")
 			print(origin)
 			print(dist)
@@ -141,7 +141,7 @@ function GM:Tick()
 			SetGlobalVector("BallSpawnPos", trace.HitPos)
 			SetGlobalFloat("SpinCamDist", dist)
 			roundInfo.fallOutZ = origin.z - (math.abs(bounds.z * 1.25) + 200)
-			timer.Simple(3.4, function()
+			timer.Simple(LEVELSPINTIME, function()
 				for i, v in ipairs(pls) do
 					v.nextSpawn = nil
 					v.playing = true
@@ -174,7 +174,7 @@ function GM:Tick()
 				v.nextSpawn = nil
 			end
 		end
-		if hasntCompleted == 0 and CurTime() > lastStartTime + 3 then
+		if hasntCompleted == 0 and CurTime() > lastStartTime + LEVELSPINTIME then
 			if not allCompleteTimer then allCompleteTimer = 0 end
 			allCompleteTimer = allCompleteTimer + FrameTime()
 			if allCompleteTimer > 1 then

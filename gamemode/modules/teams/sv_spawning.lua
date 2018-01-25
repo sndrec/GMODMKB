@@ -1,3 +1,6 @@
+
+DEFINE_BASECLASS("gamemode_base")
+
 function GM:PlayerSpawn(pl)
 	if not CurSpawnPos then return end
 	if not pl.playing then
@@ -5,7 +8,11 @@ function GM:PlayerSpawn(pl)
 		pl:SetPos(Vector(0,0,500))
 		return
 	end
+	player_manager.SetPlayerClass(pl,"player_mkb")
+	BaseClass.PlayerSpawn( self, pl )
 	pl.nextSpawn = nil
+	pl.accelRate = 5
+	pl.curAccel = 0
 	pl:SetObserverMode(OBS_MODE_NONE)
 	pl:SetTeam(TEAM_PLAYERS)
 	local ball = ents.Create("ball")
@@ -45,8 +52,7 @@ function GM:PlayerSpawn(pl)
 	for i, v in ipairs(ents.FindByModel("models/monkeyball/goalTrigger.mdl")) do
 		constraint.NoCollide( pl.ballEnt, v, 0, 0 )
 	end
-	pl:SetModel("models/combine_soldier.mdl")
-	pl:SetNoDraw(true)
+	--pl:SetModel("models/combine_soldier.mdl")
 end
 
 function GM:PlayerInitialSpawn(pl)

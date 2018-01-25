@@ -1,0 +1,55 @@
+propTable = {}
+propTable.stageName = "Jump"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L41"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(3000,650,-600)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/sfaiku.obj"
+propTable.gameObjects = {}
+curGameObjects = 1
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1601.2,-798.7,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2398.8,-191.2,-522.9)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2398.5,-283,-422.4)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2400.3,-373.5,-323.3)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2400.1,-465.8,-222.1)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2400.6,-556,-123.4)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2400.4,-648.1,-22.5)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2398,-79.6,-560)
+curGameObjects = curGameObjects + 1

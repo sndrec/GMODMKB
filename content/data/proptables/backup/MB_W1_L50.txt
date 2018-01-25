@@ -1,0 +1,13 @@
+propTable = {}
+propTable.stageName = "Isaac"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(3021.766113, 1164.474731, -337.786163)
+propTable.goals[1].ang = Angle(11.3,112 - 135,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/ennrsk.obj"

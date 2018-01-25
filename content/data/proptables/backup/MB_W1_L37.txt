@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Topsy Turvy"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L38"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(3350,2650,-425)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/xejmcv.obj"

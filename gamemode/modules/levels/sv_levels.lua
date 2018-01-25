@@ -19,6 +19,7 @@ function LoadLevel(tablename)
 			newMesh.num = k
 			table.insert(curInstancedPropTable, newMesh)
 			if propTable.animations and propTable.animations[k] then
+				print("setting animations on " .. newMesh:EntIndex())
 				tempTable1 = util.JSONToTable(file.Read("proptables/animations/" .. propTable.animations[k] .. ".json","DATA"))
 				local tempTable2 = {}
 				for n, i in pairs(tempTable1) do
@@ -60,6 +61,7 @@ function LoadLevel(tablename)
 		newGoal:Spawn()
 		newGoal:PhysicsInitShadow(false, false)
 		newGoal:SetMoveType(MOVETYPE_VPHYSICS)
+		newGoal.goalType = v.goalType
 		table.insert(curInstancedPropTable, newGoal)
 		local newGoalTrigger = ents.Create("prop_physics")
 		newGoalTrigger:SetPos(v.pos)

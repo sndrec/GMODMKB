@@ -1,0 +1,185 @@
+propTable = {}
+propTable.stageName = "Building"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L49"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(2600,0,-1925)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/779ja0.obj"
+propTable.gameObjects = {}
+curGameObjects = 1
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2699.7,24.4,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2700.3,-26.9,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2649.9,25.2,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2651.2,-29.1,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2598.6,24.1,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2599.3,-26.4,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2549.5,25.9,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2550.3,-26.5,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2673.2,49.3,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2674.3,-49.5,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2599.5,50.4,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2600.4,-50.4,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2523.8,52.1,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2550.3,-50.7,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2650.5,75.1,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2499.5,75.4,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2651.2,-75.8,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2501.5,-75.2,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2625.2,100.8,-385)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2625.9,-101.2,-385)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2474.3,493.4,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2471.4,335.2,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2469.7,169,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2467.4,-26.4,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2466.9,-206.4,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(2464.6,-387.2,15)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1076.1,749.3,-385)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1076.5,750,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1074.7,752.2,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1074.1,750.4,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1075.2,-748.8,-1510)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1075.8,-750.2,-1135)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1075.8,-750,-760)
+curGameObjects = curGameObjects + 1
+
+propTable.gameObjects[curGameObjects] = {}
+propTable.gameObjects[curGameObjects].class = "banana"
+propTable.gameObjects[curGameObjects].pos = Vector(1073.9,-750.4,-385)
+curGameObjects = curGameObjects + 1

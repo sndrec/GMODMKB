@@ -110,7 +110,8 @@ function GM:HUDPaint()
 	render.SetLightingMode( 0 )
 
 	if ClientBall ~= nil and ClientBall:IsValid() then
-		draw.SimpleTextOutlined(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaScaleSmall",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+		draw.SimpleText(math.Round(ClientBall:GetVelocity():Length() * 0.09144, 0) .. " KM/H","DermaScaleSmall",ScrW() * 0.3,ScrH() * 0.7,Color(255,255,255),TEXT_ALIGN_RIGHT,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+
 	else
 		surface.SetDrawColor(0,0,0,255)
 		surface.DrawRect((ScrW() * 0.5) - 2, (ScrH() * 0.5) - 2, 5, 5)
@@ -118,9 +119,12 @@ function GM:HUDPaint()
 		surface.DrawRect((ScrW() * 0.5) - 1, (ScrH() * 0.5) - 1, 3, 3)
 	end
 	local time = string.FormattedTime( GetGlobalFloat( "worldtimer", 0 ) - CurTime(), "%02i:%02i:%02i" )
-	draw.SimpleTextOutlined(time,"DermaScaleMed",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	local w,h = draw.SimpleText(time,"DermaScaleMed",ScrW()*0.5, ScrH()*0.1,Color(255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,2,Color(0,0,0))
+	surface.SetDrawColor(0,0,0,50)
+	surface.DrawRect((ScrW() * 0.5) - (w * 0.5) - 3, (ScrH()*0.1) - (h * 0.5) - 3, w + 6, h + 6)
 	curScore = Lerp(((math.abs(LocalPlayer():GetMKBScore() - curScore)) + 35) * FrameTime() * 0.3,curScore,LocalPlayer():GetMKBScore())
-	draw.SimpleTextOutlined("Score: " .. math.Round(curScore, 0),"DermaScaleMed",ScrW()*0.05, ScrH()*0.9,Color(255,255,255),TEXT_ALIGN_LEFT,TEXT_ALIGN_LEFT,2,Color(0,0,0))
+	w,h = draw.SimpleText("Score: " .. math.Round(curScore, 0),"DermaScaleMed",ScrW()*0.05, ScrH()*0.9,Color(255,255,255),TEXT_ALIGN_LEFT,TEXT_ALIGN_LEFT,2,Color(0,0,0))
+	surface.DrawRect((ScrW() * 0.05) - 3, (ScrH()*0.9) - 3, w + 6, h + 6)
 
 	local size = ScrW() * 0.08
 	local xPos = ScrW() * 0.25
@@ -131,9 +135,7 @@ function GM:HUDPaint()
 
 	local mouseJoyEnable = GetConVar( "mb_mousejoy" ):GetBool()
 	if mouseJoyEnable then
-		print("eyy")
 		local mj = LocalPlayer():GetMouseJoy()
-		cam.Start2D()
 		render.SetColorMaterial()
 		surface.SetDrawColor(0,0,0,100)
 		surface.SetMaterial(whiteMat)
@@ -147,7 +149,6 @@ function GM:HUDPaint()
 		draw.Circle( visX + (x * size),  visY + (y * size), size * 0.04, size * 0.04, 8 )
 		surface.SetDrawColor(255,80,80,200)
 		draw.Circle( visX, visY, size * 0.05, size * 0.05, 12 )
-		cam.End2D()
 	end
 end
 

@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Spiral"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L8"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(5750,0,-62.5)
+propTable.goals[1].ang = Angle(0,120,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/om10d2.obj"

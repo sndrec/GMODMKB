@@ -21,7 +21,18 @@ end
 
 if CLIENT then
 	CreateConVar( "mb_mousejoy", 0, FCVAR_ARCHIVE + FCVAR_CLIENTCMD_CAN_EXECUTE + FCVAR_USERINFO, "Enable pseudo-joystick controlled by the mouse." )
+else
+	concommand.Add("AddBallVel",function(pl, cmd, args)
+
+		if pl.ballEnt then
+			local b = pl.ballEnt:GetPhysicsObject()
+			b:SetVelocity(b:GetVelocity() + Vector(tonumber(args[1]),tonumber(args[2]),tonumber(args[3])))
+		end
+
+	end)
 end
+
+local whiteMat = Material("vgui/white.vmt")
 
 function GM:FinishMove( pl, move )
 	move:SetMaxClientSpeed( 100 )
@@ -52,11 +63,15 @@ function GM:FinishMove( pl, move )
 					forwardMove = forwardMove * math.max(math.abs(sideMove * 1.2), 0.66)
 				end
 				local baseMove = (pl.ballEnt.ballViewAng:Forward() * forwardMove) + (pl.ballEnt.ballViewAng:Right() * sideMove * 0.8)
-				local modifier = math.sin(math.pi * baseMove:GetNormalized():Dot(pl.ballEnt.ballViewAng:Forward()))
+				local desiredAccel = baseMove:Length()
+				pl.curAccel = math.Approach(pl.curAccel, baseMove:Length(), pl.accelRate * FrameTime())
+				local realAccel = Lerp(0.25, pl.curAccel, desiredAccel)
+				local realMove = baseMove:GetNormalized() * realAccel
+				local modifier = math.sin(math.pi * realMove:GetNormalized():Dot(pl.ballEnt.ballViewAng:Forward()))
 				modifier = math.max((modifier * 0.5) + 1, 1)
 				modifier = (modifier - 0.2) * 1.25
 				--print(modifier)
-				pl.ballEnt.moveData = baseMove * modifier
+				pl.ballEnt.moveData = realMove * modifier
 				move:SetAngles(pl.ballEnt.ballViewAng)
 			else
 				pl.ballEnt.moveData = Vector(0,0,0)
@@ -91,3 +106,5 @@ end
 function GM:PlayerNoClip( pl, state )
 	return false
 end
+
+LEVELSPINTIME = 5

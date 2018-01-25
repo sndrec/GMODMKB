@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Loop-De-Loop"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L40"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(4200,-226,-2787.5)
+propTable.goals[1].ang = Angle(0,90,90)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/ikn1lc.obj"

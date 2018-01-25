@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Curvy"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L15"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(6900,1625,-300)
+propTable.goals[1].ang = Angle(0,180,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/j8m72y.obj"

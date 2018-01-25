@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Inverted Torii"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L29"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(5100,0,-350)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/z6ur1e.obj"

@@ -7,3 +7,7 @@ ENT.Purpose= "Mombkey,,"
 ENT.Instructions= "Use wisely."
 ENT.Spawnable = true
 ENT.AdminSpawnable = true
+
+function ENT:SetupDataTables()
+	self:NetworkVar("Bool",1,"InPlay")
+end

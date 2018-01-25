@@ -97,8 +97,8 @@ function ENT:Draw()
 		--cam.End2D()
 	end
 	if pl.clientBall and pl.clientBall == self and pl.clientBall:IsValid() then
-		pl:SetPos(self:GetPos() - Vector(0,0,23))
-		pl:SetRenderOrigin(self:GetPos() - Vector(0,0,23))
+		pl:SetPos(self:GetPos() - Vector(0,0,25))
+		pl:SetRenderOrigin(self:GetPos() - Vector(0,0,25))
 		if pl == LocalPlayer() then
 			local newAng = Angle(0, ballViewAng.y, 0)
 			pl:SetEyeAngles(newAng)
@@ -132,6 +132,16 @@ victory = 0
 
 net.Receive("Victory", function()
 	victory = net.ReadInt(8)
+	print("victory is now " .. victory)
+	local partyBall = Entity(net.ReadInt(16))
+	if not partyBall:IsValid() then return end
+	if victory == 1 then
+		partyBall:SetSequence(partyBall:LookupSequence("open"))
+	elseif victory == 2 then
+		partyBall:SetSequence(partyBall:LookupSequence("open"))
+	else
+		partyBall:SetSequence(partyBall:LookupSequence("idle"))
+	end
 end)
 
 local function MyCalcView( pl, pos, angles, fov )
@@ -169,16 +179,21 @@ local function MyCalcView( pl, pos, angles, fov )
 	end
 	local StartTime = GetGlobalFloat("LastStartTime", 0)
 
-	if StartTime + 3.42 > CurTime() then
+	if StartTime + (LEVELSPINTIME + 0.3) > CurTime() then
 		local SpinCamOrigin = GetGlobalVector("SpinCamOrigin",Vector(0,0,0))
 		local BallSpawnPos = GetGlobalVector("BallSpawnPos", Vector(0,0,0))
 		local SpinCamDist = GetGlobalFloat("SpinCamDist", 1000)
-		debugoverlay.Cross(SpinCamOrigin,32,0.05,Color( 255, 0, 0 ),true)
-		local lerp = ((StartTime + 3.4) - CurTime()) / 3.4
-		local smoothLerp = 1 - ((math.sin((math.Clamp(lerp * 1.5, 0, 1) * math.pi) - (math.pi * 0.5)) + 1) * 0.5)
-		local smoothLerp2 = 1 - ((math.sin((math.Clamp(lerp * 1.1, 0, 1) * math.pi) - (math.pi * 0.5)) + 1) * 0.5)
+		local lerp = math.Clamp(1 - (((StartTime + LEVELSPINTIME) - CurTime()) / LEVELSPINTIME), 0, 1)
+		local lerp2 = math.Clamp(1 - (((StartTime + LEVELSPINTIME) - CurTime()) / (LEVELSPINTIME * 0.75)), 0, 1)
+		local lerp3 = math.Clamp(1 - (((StartTime + LEVELSPINTIME) - CurTime()) / (LEVELSPINTIME * 0.5)), 0, 1)
+		local lerp3 = math.Clamp(1 - (((StartTime + LEVELSPINTIME) - CurTime()) / (LEVELSPINTIME * 0.65)), 0, 1)
+		local smoothLerp = math.sin(math.min(lerp, 1) * math.pi * 0.5)
+		local smoothLerp2 = (math.sin((lerp2 * math.pi) - (math.pi * 0.5)) + 1) * 0.5
+		local smoothLerp3 = (math.sin((lerp3 * math.pi) - (math.pi * 0.5)) + 1) * 0.5
+		local ohgod = math.sin(smoothLerp2 * (math.pi * 0.5))
+		local ohgod2 = math.sin(ohgod * (math.pi * 0.5))
+		print(ohgod)
 
-		print(smoothLerp)
 		local CamPosBase = SpinCamOrigin - (Angle(30,(lerp * 200) - 10,0):Forward() * ((SpinCamDist * 1) + (SpinCamDist * lerp * 0.25)))
 		local CamAngle = Angle(30,(lerp * 200) - 10,0)
 		local camupReal = camUp:GetFloat()
@@ -187,8 +202,10 @@ local function MyCalcView( pl, pos, angles, fov )
 		local finalCamAngle = Angle(15,0,0)
 		local finalCamPos = BallSpawnPos - ( finalCamAngle:Forward() * camsideReal) + ( finalCamAngle:Up() * camupReal ) - Vector(0,0,25)
 
-		local lerpCamPos = LerpVector(smoothLerp2,CamPosBase,finalCamPos)
-		local lerpCamAngle = LerpAngle(smoothLerp2,CamAngle,Angle(0,0,0))
+		local lerpCamAngle = Angle(Lerp(smoothLerp3, 40, 0), Lerp(smoothLerp, LEVELSPINTIME * 60, 0), 0)
+		local realCamOrigin = LerpVector(smoothLerp2,SpinCamOrigin, finalCamPos)
+		local lerpCamPos = realCamOrigin + (-lerpCamAngle:Forward() * Lerp(smoothLerp3, SpinCamDist, 0))
+		debugoverlay.Cross(realCamOrigin,32,0.05,Color( 255, 0, 0 ),true)
 		
 		view.origin = lerpCamPos
 		view.angles = lerpCamAngle

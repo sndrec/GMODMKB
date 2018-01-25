@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Simple"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L7"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(5750,0,-112.5)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 30
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/codx3j.obj"

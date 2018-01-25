@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Exam-A"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L24"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(1600,-1600,0)
+propTable.goals[1].ang = Angle(0,0,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/lvu4am.obj"

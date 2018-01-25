@@ -12,13 +12,13 @@ function WriteLeaderboardEntry(pl, stage, time)
 	end
 
 	local dontWrite = false
-	
+
 	for i = #newTable, 1, -1 do
 		if newTable[i].steamID == ID then
 			if newTable[i].clearTime < time then
 				return
 			else
-				CreateClientText(pl, "New personal best!", 6, "DermaScaleSmall", 0.5, 0.8, Color(255,255,255,255))
+				CreateClientText(pl, "New personal best!", 6, "DermaScaleSmall", 0.5, 0.75, Color(255,255,255,255))
 				table.remove(newTable, i)
 			end
 		end
@@ -42,7 +42,7 @@ function WriteLeaderboardEntry(pl, stage, time)
 				break
 			end
 		end
-		CreateClientText(pl, "Your time was #" .. place .. ".", 6, "DermaScaleSmall", 0.5, 0.7, Color(255,255,255,255))
+		CreateClientText(pl, "Your time was #" .. place .. ".", 6, "DermaScaleSmall", 0.5, 0.8, Color(255,255,255,255))
 	end
 
 
@@ -91,16 +91,18 @@ end
 function RetrieveWR(stage)
 	local filename = "leaderboards/LB_" .. stage .. ".txt"
 	print(filename)
-	local newTable = {}
+	local newTable = nil
 	if not file.Exists(filename,"DATA") then
 		for i, v in ipairs(player.GetAll()) do
 			v:ChatPrint("No times for this stage yet.")
 		end
 	else
+		newTable = {}
 		newTable = util.JSONToTable(file.Read(filename,"DATA"))
+		return newTable[1]
 	end
 
-	return newTable[1]
+	return nil
 
 end
 

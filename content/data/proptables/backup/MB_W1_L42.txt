@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "Keyhole"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L43"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(7100,0,-25)
+propTable.goals[1].ang = Angle(0,90,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/5m119l.obj"

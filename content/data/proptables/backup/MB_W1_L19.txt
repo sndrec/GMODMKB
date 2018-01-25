@@ -1,0 +1,14 @@
+propTable = {}
+propTable.stageName = "J-Drop"
+propTable.spawnData = {}
+propTable.spawnData.pos = Vector(0, 0, 0)
+propTable.spawnData.ang = Angle(0, 0, 0)
+propTable.nextLevel = "MB_W1_L20"
+propTable.goals = {}
+propTable.goals[1] = {}
+propTable.goals[1].pos = Vector(-2200,3150,-2400)
+propTable.goals[1].ang = Angle(0,-180,0)
+propTable.goals[1].goalType = 1
+propTable.levelTimer = 60
+propTable.objects = {}
+propTable.objects[1] = "https://files.catbox.moe/krd8j9.obj"

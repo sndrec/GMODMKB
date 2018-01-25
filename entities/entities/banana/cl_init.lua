@@ -4,16 +4,13 @@ function ENT:Initialize()
 	self.model = ClientsideModel("models/props_junk/watermelon01.mdl")
 	self.model:SetNoDraw(true)
 	self.model:SetModelScale(2,0)
+	self.basePos = self:GetPos()
 end
 
 function ENT:Draw()
-	local pos = self:GetPos()
     local ang = self:GetAngles()
-
-    local newPos = ang:Up() * (math.sin(CurTime() * 3) * 8)
-
     if not self:GetPickedUp() then
-    	self.model:SetPos(pos + newPos)
+    	self.model:SetPos(self.basePos + Vector(0,0,math.sin(CurTime() * 3) * 8))
     	self.model:SetAngles(Angle(0,(CurTime() * 180) % 360,0))
     	self.model.curPos = self.model:GetPos()
     	self.model.curAng = self.model:GetAngles()

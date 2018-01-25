@@ -137,7 +137,7 @@ function ENT:Think()
 		end
 		if CurTime() > self.victoryTime + 3.5 then
 			net.Start("Victory")
-			net.WriteBool(false)
+			net.WriteInt(0, 8)
 			net.Send(pl)
 			self:Remove()
 		end
@@ -226,38 +226,8 @@ function ENT:Think()
 			collisiongroup = COLLISION_GROUP_PROJECTILE
 		})
 	end
-	if goalTrace and goalTrace.Hit and goalTrace.Entity.goalTrigger then
-		local clearTime = math.Round(CurTime() - self.spawnTime, 2) - 0.60
-		local timeFromRoundStart = math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1
-		local percentage = 0.5 + ((1 - (timeFromRoundStart / roundInfo.curStageTime)) * 0.5)
-		print(percentage)
-		pl:AddMKBScore(150 * goalTrace.Entity.goalType * percentage)
-		pl:ChatPrint("You beat the level.")
-		local goal = goalTrace.Entity
-		goal:EmitSound("monkeyball/fx_goaltape.wav",90,math.random(95,105), 1)
-		for i, v in ipairs(player.GetAll()) do
-			v:ChatPrint(pl:Nick() .. " beat the stage in " .. math.Round(roundInfo.curStageTime - (roundInfo.curTimer - CurTime()),2) - 1 .. " seconds.")
-		end
-		CreateClientText(pl, "GOAL!", 4, "DermaScaleLarge", 0.5, 0.25, Color(150,255,150,255))
-		CreateClientText(pl, clearTime .. " seconds", 4, "DermaScaleMed", 0.5, 0.35, Color(255,255,255,255))
-		WriteLeaderboardEntry(pl, roundInfo.curLevel, clearTime)
-		pl.victory = true
-		self.victory = true
-		self.victoryTime = CurTime()
-		net.Start("Victory")
-		net.WriteInt(1, 8)
-		net.Send(pl)
-		timer.Simple(1.75, function()
-			net.Start("Victory")
-			net.WriteInt(2, 8)
-			net.Send(pl)
-			self:EmitSound("monkeyball/fx_ball_woosh.wav",80,100, 0.4)
-		end)
-		timer.Simple(3.5, function()
-			net.Start("Victory")
-			net.WriteInt(0, 8)
-			net.Send(pl)
-		end)
+	if goalTrace and goalTrace.Hit and goalTrace.Entity.goalTrigger and not self.victory then
+		goalTrace.Entity.goalParent:DoGoal(pl)
 	end
 
 	self.oldPos = self:GetPos()
@@ -273,7 +243,7 @@ function ENT:Think()
 			net.WriteInt(0, 8)
 			net.Send(pl)
 			self:Remove()
-			pl.nextSpawn = CurTime()
+			pl.nextSpawn = CurTime() + 0.05
 			self.fallout = false
 		end)
 	end
